@@ -5,4 +5,5 @@ package com.ev4ngel.myapplication;
  */
 public class Common {
     public static String ProjectPath="";
+    public static int camDeltaAngle=90;
 }

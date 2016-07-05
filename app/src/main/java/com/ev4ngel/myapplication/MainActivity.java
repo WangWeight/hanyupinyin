@@ -71,24 +71,36 @@ public class MainActivity extends AppCompatActivity
     private TextView posHeight;//
     private TextView attitudeView;//
     private TextView batteryTempView;
+
+    private FloatingActionButton camFab;
+    private FloatingActionButton gimbalFab;
     protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             //refreshUI();
             if(AutoflyApplication.isAircraftConnected()){
-                Tools.showToast(getApplicationContext(),"连接成功！");
+                camFab.setEnabled(true);
+                gimbalFab.setEnabled(true);
+              Tools.showToast(getApplicationContext(), "Connection Success");
                 getCamera();
                 getGimbal();
                 getBattery();
                 getFlightController();
                 registerListener();
+
              }
+            else
+            {
+                Tools.showToast(getApplicationContext(),"Connection Lost");
+            }
         }
     };
     public void registerListener(){
         battery.setBatteryStateUpdateCallback(this);
         camera.setDJICameraGeneratedNewMediaFileCallback(this);
         flightController.setUpdateSystemStateCallback(this);
+        camFab.setOnClickListener(this);
+        gimbalFab.setOnClickListener(this);
     }
     /*
     private void refreshUI(){
@@ -105,7 +117,7 @@ public class MainActivity extends AppCompatActivity
         }
         return null;
     }
-    private void getGimbal()
+    private void getGimbal()//初始化云台
     {
         if( AutoflyApplication.isAircraftConnected())
         {
@@ -117,11 +129,9 @@ public class MainActivity extends AppCompatActivity
                 Tools.showToast(getApplicationContext(),"Get Gimbal Successful");
             }
         }
-        else {
-            Tools.showToast(getApplicationContext(),"Get Gimbal Fail");
-        }
+
     }
-    private void getCamera()
+    private void getCamera()//初始化相机
     {
         if(AutoflyApplication.isAircraftConnected())
         {
@@ -136,7 +146,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void getBattery()
+    private void getBattery()//初始化电池
     {
         if(AutoflyApplication.isAircraftConnected())
         {
@@ -150,7 +160,7 @@ public class MainActivity extends AppCompatActivity
             Tools.showToast(getApplicationContext()," Battery Fail");
         }
     }
-    private void getFlightController()
+    private void getFlightController()//初始化飞控
     {
             if (AutoflyApplication.getAircraftInstance() != null) {
                 flightController = AutoflyApplication.getAircraftInstance().getFlightController();
@@ -175,6 +185,25 @@ public class MainActivity extends AppCompatActivity
             steps.add(gotoStep);
         }
         //mMissonManager.prepareMission(new DJICustomMission(steps),null,this);
+    }
+    private void resetCameraPosition()
+    {
+        if(gimbal!=null)
+        {
+            DJIGimbal.DJIGimbalAngleRotation mPitchRotation = new DJIGimbal.DJIGimbalAngleRotation(false, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+                    mYawRotation = new DJIGimbal.DJIGimbalAngleRotation(false, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+                    mRollRotation = new DJIGimbal.DJIGimbalAngleRotation(false, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise);
+            gimbal.rotateGimbalByAngle(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle, mPitchRotation, mYawRotation, mRollRotation, new DJIBaseComponent.DJICompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if(djiError!=null)
+                        Tools.showToast(getApplicationContext(), "Rotate gimbal fail");
+                }
+            });
+        }
+    }
+    private void takePhotos()
+    {
 
     }
     private void initUi()
@@ -187,7 +216,12 @@ public class MainActivity extends AppCompatActivity
         batteryRemainView=(TextView)findViewById(R.id.battery_view);
         batteryVolView=(TextView)findViewById(R.id.battery_vol_view);
         batteryTempView=(TextView)findViewById(R.id.battery_temp_view);
+        camFab=(FloatingActionButton)findViewById(R.id.camer_fab);
+        gimbalFab=(FloatingActionButton)findViewById(R.id.gimbal_fab);
+        camFab.setEnabled(false);
+        gimbalFab.setEnabled(false);
     }
+
     private void initParams()
     {
         missionLocations=new ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>();
@@ -343,15 +377,22 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onClick(View v) {
-        if(v.getId()==R.id.fab) {
-            if (AutoflyApplication.isAircraftConnected()&&camera!=null)
+        switch (v.getId()) {
+            case R.id.fab: {
+                if (AutoflyApplication.isAircraftConnected() && camera != null) {
+                    camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, this);
+                } else {
+                    Tools.showToast(getApplicationContext(), "Camera Fail");
+                }
+            };break;
+            case R.id.camer_fab:
             {
-                camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single,this);
-            }
-            else
+
+            };break;
+            case R.id.gimbal_fab:
             {
-                Tools.showToast(getApplicationContext(),"Camera Fail");
-            }
+                resetCameraPosition();
+            };break;
         }
     }
 }
