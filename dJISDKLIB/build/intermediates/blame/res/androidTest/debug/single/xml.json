@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "F:\\PG\\Mobile-SDK-Android\\Sample Code\\MyApplication\\dJISDKLIB\\build\\intermediates\\res\\merged\\androidTest\\debug\\xml\\accessory_filter.xml",
+        "source": "F:\\PG\\Mobile-SDK-Android\\Sample Code\\MyApplication\\dJISDKLIB\\build\\intermediates\\bundles\\debug\\res\\xml\\accessory_filter.xml"
+    },
+    {
+        "merged": "F:\\PG\\MyApplication\\dJISDKLIB\\build\\intermediates\\res\\merged\\androidTest\\debug\\xml\\accessory_filter.xml",
+        "source": "F:\\PG\\MyApplication\\dJISDKLIB\\build\\intermediates\\bundles\\debug\\res\\xml\\accessory_filter.xml"
+    }
+]
