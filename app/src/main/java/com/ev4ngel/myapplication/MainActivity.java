@@ -135,6 +135,7 @@ public class MainActivity extends AppCompatActivity
             Tools.showToast(getApplicationContext(),"Camera Fail");
         }
     }
+
     private void getBattery()
     {
         if(AutoflyApplication.isAircraftConnected())
@@ -222,14 +223,6 @@ public class MainActivity extends AppCompatActivity
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(this);
-        /*new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
-            }
-        });
-        */
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -238,26 +231,6 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-
-        //ArrayList<WayPoint> a=apf.WayPoints;
-
-        /*String rlt="[{\"Position\" : {\"Latitude\" : 23,\"Longitude\" : 123,\"Altitude\" : 23},\"Heading\" : 111,\"StartTime\" : \"2016-7-1 11:46:33\",\"StopTime\" : \"2016-7-1 11:46:40\",\"Photos\" : [{\"Name\" : \"DJI_111.jpg\",\"Yaw\" : 1,\"Pitch\" : 3},{\"Name\" : \"DJI_113.jpg\",\"Yaw\" : 1,\"Pitch\" : 2}, {\"Name\" : \"DJI_115.jpg\",\"Yaw\" : 1,\"Pitch\" : 4}]},{\"Position\" : {\"Latitude\" : 11,\"Longitude\" : 21,\"Altitude\" : 23},\"Heading\" : 111,\"StartTime\" : \"2016-7-1 11:45:30\",\"StopTime\" : \"2016-7-1 11:45:40\",\"Photos\" : [{\"Name\" : \"DJI_1133.jpg\",\"Yaw\" : 2,\"Pitch\" : 34},{\"Name\" : \"DJI_1133.jpg\",\"Yaw\" : 2,\"Pitch\" : 34},{\"Name\" : \"DJI_1133.jpg\",\"Yaw\" : 2,\"Pitch\" : 34},{\"Name\" : \"DJI_1133.jpg\",\"Yaw\" : 2,\"Pitch\" : 34},{\"Name\" : \"DJI_1133.jpg\",\"Yaw\" : 2,\"Pitch\" : 34},{\"Name\" : \"DJI_1133.jpg\",\"Yaw\" : 2,\"Pitch\" : 34},{\"Name\" : \"DJI_1133.jpg\",\"Yaw\" : 2,\"Pitch\" : 34}]}]";
-        try {
-            JSONArray jA = new JSONArray(new JSONTokener(rlt));
-            for(int i=0;i<jA.length();i++)
-            {
-                WayPoint wp=new WayPoint(getApplicationContext(),(JSONObject)jA.get(i));
-                Toast.makeText(getApplicationContext(), "Lat:"+wp.lat+",st:"+wp.startTime,Toast.LENGTH_LONG).show();;
-            }
-
-        }catch(JSONException e)
-        {
-            Toast.makeText(getApplicationContext(),"F",Toast.LENGTH_LONG).show();
-        }
-        */
-        //int len=a.size();
-        //Toast.makeText(getApplicationContext(),apf.WayPoints.get(0).name,Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -335,7 +308,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onResult(DJIMedia djiMedia) {
+        if(AutoflyApplication.isAircraftConnected())
+        {
 
+        }
     }
 
     @Override

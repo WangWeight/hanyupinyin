@@ -24,6 +24,7 @@ public class AutoflyApplication extends Application {
     private static DJIBaseProduct mProduct;
     private Handler mHandler;
 
+
     /**
      * Gets instance of the specific product connected after the
      * API KEY is successfully validated. Please make sure the
