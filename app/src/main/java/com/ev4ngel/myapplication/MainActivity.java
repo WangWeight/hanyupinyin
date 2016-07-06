@@ -5,9 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -30,7 +28,6 @@ import dji.sdk.FlightController.DJIFlightControllerDataType;
 import dji.sdk.FlightController.DJIFlightControllerDelegate;
 import dji.sdk.Gimbal.DJIGimbal;
 import dji.sdk.MissionManager.DJICustomMission;
-import dji.sdk.MissionManager.DJIMission;
 import dji.sdk.MissionManager.DJIMissionManager;
 import dji.sdk.MissionManager.MissionStep.DJIFollowmeMissionStep;
 import dji.sdk.MissionManager.MissionStep.DJIGoToStep;
@@ -47,15 +44,15 @@ public class MainActivity extends AppCompatActivity
         DJICamera.CameraGeneratedNewMediaFileCallback,
         Toolbar.OnMenuItemClickListener,
         DJIFlightControllerDelegate.FlightControllerUpdateSystemStateCallback,
-        View.OnClickListener
-{
-    private DJIGimbal gimbal=null;
-    private DJICamera camera=null;
-    private DJIBattery battery=null;
-    private DJIFlightController flightController=null;
-    private DJIMissionManager mMissonManager=null;
-    private DJICustomMission mMission=null;
+        View.OnClickListener {
+    private DJIGimbal gimbal = null;
+    private DJICamera camera = null;
+    private DJIBattery battery = null;
+    private DJIFlightController flightController = null;
+    private DJIMissionManager mMissonManager = null;
+    private DJICustomMission mMission = null;
     private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D> missionLocations;
+    private Toolbar toolbar;
     private View projectPage;//project页面
     private View airlinePage;//航线页面
     private View settingPage;//设置页面
@@ -74,39 +71,45 @@ public class MainActivity extends AppCompatActivity
 
     private FloatingActionButton camFab;
     private FloatingActionButton gimbalFab;
-    protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
+
+   /* protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             //refreshUI();
-            if(AutoflyApplication.isAircraftConnected()){
-                camFab.setEnabled(true);
-                gimbalFab.setEnabled(true);
-              Tools.showToast(getApplicationContext(), "Connection Success");
+            if (AutoflyApplication.isAircraftConnected()) {
+                //camFab.setBackgroundColor(getResources().getDrawable(R.drawable.box));
+                //gimbalFab.setEnabled(true);
+                Tools.showToast(getApplicationContext(), "Connection Success");
                 getCamera();
                 getGimbal();
                 getBattery();
                 getFlightController();
-                registerListener();
-
-             }
-            else
-            {
-                Tools.showToast(getApplicationContext(),"Connection Lost");
+                registerComponentListener();
+            } else {
+                Tools.showToast(getApplicationContext(), "Connection Lost");
             }
         }
     };
-    public void registerListener(){
+
+    public void registerComponentListener() {
         battery.setBatteryStateUpdateCallback(this);
         camera.setDJICameraGeneratedNewMediaFileCallback(this);
         flightController.setUpdateSystemStateCallback(this);
-        camFab.setOnClickListener(this);
-        gimbalFab.setOnClickListener(this);
     }
-    /*
-    private void refreshUI(){
-        Tools.showToast(getApplicationContext(), "Connection successfully");
-    }
-    */
+*/
+/*
+    public void registerUiListener(){
+       //setSupportActionBar(toolbar);
+       //toolbar.setOnMenuItemClickListener(this);
+       camFab.setOnClickListener(this);
+       gimbalFab.setOnClickListener(this);
+   }
+*/
+
+      private void refreshUI(){
+          Tools.showToast(getApplicationContext(), "Connection successfully");
+      }
+
     private DJIBaseProduct getProduct()
     {
         try {
@@ -145,7 +148,6 @@ public class MainActivity extends AppCompatActivity
             Tools.showToast(getApplicationContext(),"Camera Fail");
         }
     }
-
     private void getBattery()//初始化电池
     {
         if(AutoflyApplication.isAircraftConnected())
@@ -173,9 +175,7 @@ public class MainActivity extends AppCompatActivity
                 Tools.showToast(getApplicationContext(), "Get flightc Fail");
             }
     }
-
-
-
+/*
     private void generateMissions()
     {
         DJIFlightControllerDataType.DJILocationCoordinate3D loc;
@@ -184,8 +184,9 @@ public class MainActivity extends AppCompatActivity
             DJIGoToStep gotoStep = new DJIGoToStep(1,1,1,this);
             steps.add(gotoStep);
         }
-        //mMissonManager.prepareMission(new DJICustomMission(steps),null,this);
+        mMissonManager.prepareMission(new DJICustomMission(steps),null,this);
     }
+
     private void resetCameraPosition()
     {
         if(gimbal!=null)
@@ -202,12 +203,10 @@ public class MainActivity extends AppCompatActivity
             });
         }
     }
-    private void takePhotos()
-    {
-
-    }
+*/
     private void initUi()
     {
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         projectPage=findViewById(R.id.project);
         airlinePage=findViewById(R.id.airline);//).setVisibility(View.GONE);
         camOrMapPage=findViewById(R.id.cam_or_map);//).setVisibility(View.GONE);
@@ -218,8 +217,8 @@ public class MainActivity extends AppCompatActivity
         batteryTempView=(TextView)findViewById(R.id.battery_temp_view);
         camFab=(FloatingActionButton)findViewById(R.id.camer_fab);
         gimbalFab=(FloatingActionButton)findViewById(R.id.gimbal_fab);
-        camFab.setEnabled(false);
-        gimbalFab.setEnabled(false);
+        //camFab.setBackground(getResources().getDrawable(R.drawable.ic_menu_camera));
+        //gimbalFab.setBackgroundColor(getResources().getColor(R.color.fad_invalid,getTheme()));
     }
 
     private void initParams()
@@ -230,7 +229,7 @@ public class MainActivity extends AppCompatActivity
         getCamera();
         getBattery();
         initUi();
-
+        //registerUiListener();
     }
     private void setPageInvisibility()
     {
@@ -239,22 +238,18 @@ public class MainActivity extends AppCompatActivity
         camOrMapPage.setVisibility(View.GONE);
         settingPage.setVisibility(View.GONE);
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setOnMenuItemClickListener(this);
-        toolbar.getChildAt(0);
         initParams();
         setPageInvisibility();//设置所有page不可见
         projectPage.setVisibility(View.VISIBLE);//将project设置可见
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(AutoflyApplication.FLAG_CONNECTION_CHANGE);
-        getApplicationContext().registerReceiver(mReceiver, filter);
-
+        //registerReceiver(mReceiver, filter);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(this);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -350,7 +345,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-        getApplicationContext().unregisterReceiver(mReceiver);
+        ///getApplicationContext().unregisterReceiver(mReceiver);
         super.onDestroy();
     }
 
@@ -387,11 +382,12 @@ public class MainActivity extends AppCompatActivity
             };break;
             case R.id.camer_fab:
             {
-
+                Tools.showToast(getApplicationContext(),"Cam fab click");
             };break;
             case R.id.gimbal_fab:
             {
-                resetCameraPosition();
+                Tools.showToast(getApplicationContext(),"Gimbal fab click");
+                ///resetCameraPosition();
             };break;
         }
     }

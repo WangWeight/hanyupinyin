@@ -69,7 +69,7 @@ public class AutoflyApplication extends Application {
         public void onGetRegisteredResult(DJIError error) {
             if(error == DJISDKError.REGISTRATION_SUCCESS) {
                 Toast.makeText(getApplicationContext(),
-                       "Registe successfully",
+                       "Register successfully",
                         Toast.LENGTH_LONG).show();
                 DJISDKManager.getInstance().startConnectionToProduct();
             } else {
