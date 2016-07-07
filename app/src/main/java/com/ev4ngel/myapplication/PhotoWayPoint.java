@@ -14,10 +14,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import dji.sdk.util.DJILocationCoordinate2D;
+
 /**
  * Created by Administrator on 2016/7/1.
  */
-public class WayPoint {
+public class PhotoWayPoint {
     private String _pos="Position";
     private String _lat="Latitude";
     private String _lng="Longitude";
@@ -31,17 +33,17 @@ public class WayPoint {
     public double lat=0;
     public double lng=0;
     public double alt=0;
-    public float heading=0;
+    public double heading=0;
     public String startTime="";
     public String stopTime="";
     public ArrayList<PhotoInfo> photos;
     private Context mContext;
-    public WayPoint(Context context)
+    public PhotoWayPoint(Context context)
     {
         mContext=context;
         photos=new ArrayList<PhotoInfo>();
     }
-    public WayPoint(Context context,JSONObject jObj)
+    public PhotoWayPoint(Context context,JSONObject jObj)
     {
         mContext=context;
         photos=new ArrayList<PhotoInfo>();
@@ -50,6 +52,11 @@ public class WayPoint {
     public void addPhoto(String pname,float yaw,float pitch)
     {
         photos.add(new PhotoInfo(pname, yaw, pitch));
+    }
+    public void setPosition(DJILocationCoordinate2D loc)
+    {
+        lat=loc.latitude;
+        lng=loc.longitude;
     }
     public void addPhoto(PhotoInfo pi)
     {

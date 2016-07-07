@@ -28,20 +28,20 @@ import java.util.PriorityQueue;
  "Photos" : [{"Name" : "DJI_111.jpg","Yaw" : 1,"Pitch" : 3}]}}
  ]*
  */
-public class WayPointFile {
+public class PhotoWayPointFile {
     private String fileName="";
     public FileOutputStream fos=null;
-    public ArrayList<WayPoint> WayPoints;
+    public ArrayList<PhotoWayPoint> WayPoints;
     private Context mContext;
-    public WayPointFile(Context context,String wpfName)
+    public PhotoWayPointFile(Context context,String wpfName)
     {
         mContext=context;
         fileName=wpfName;
-        WayPoints=new ArrayList<WayPoint>();
-        readFile();
+        WayPoints=new ArrayList<PhotoWayPoint>();
+        read();
 
     }
-    public void writeFile(String fn)
+    public void write(String fn)
     {
          File ff=new File(fn);
         try {
@@ -58,7 +58,11 @@ public class WayPointFile {
 
         }
     }
-    public void readFile()
+    public void write()
+    {
+        write(fileName);
+    }
+    public void read()
     {
         File f=new File(fileName);
         if(f.exists()) {
@@ -72,7 +76,7 @@ public class WayPointFile {
                     JSONArray jWaypoints = new JSONArray(new JSONTokener(new String(b)));
                     for(int i=0;i<jWaypoints.length();i++)
                     {
-                        WayPoint wp=new WayPoint(mContext,(JSONObject)jWaypoints.get(i));
+                        PhotoWayPoint wp=new PhotoWayPoint(mContext,(JSONObject)jWaypoints.get(i));
                         WayPoints.add(wp);
                     }
                     Toast.makeText(mContext, ""+WayPoints.size(),Toast.LENGTH_LONG).show();
@@ -98,9 +102,9 @@ public class WayPointFile {
         }
     }
 
-    public void addWayPoint(WayPoint wp)
+    public void addWayPoint(PhotoWayPoint wp)
     {
         WayPoints.add(wp);
-        writeFile(fileName);
+        write(fileName);
     }
 }

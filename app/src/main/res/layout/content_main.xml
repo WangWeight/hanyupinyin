@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-   >
+    android:weightSum="1">
 
 
     <Button
@@ -25,18 +25,90 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"/>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/toolbar_margin"
+            android:text="经度:"/>
+        <TextView
+            android:id="@+id/lng_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="000:000:0000E"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/toolbar_margin"
+            android:text="纬度:"/>
+        <TextView
+            android:id="@+id/lat_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00:0000N"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/toolbar_margin"
+            android:text="高度:"/>
+        <TextView
+            android:id="@+id/alt_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="18m"/>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/toolbar_margin"
+            android:text="x速度:"/>
+        <TextView
+            android:id="@+id/x_speed_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0m/s"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/toolbar_margin"
+            android:text="y速度:"/>
+        <TextView
+            android:id="@+id/y_speed_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0m/s"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/toolbar_margin"
+            android:text="Z速度:"/>
+        <TextView
+            android:id="@+id/battery_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0m/s"/>
+    </LinearLayout>
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/camer_fab"
-        android:layout_width="wrap_content"
+        android:layout_width="144dp"
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_dialog_email" />
+        android:src="@android:drawable/ic_dialog_map"
+        android:layout_weight="0.17" />
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/gimbal_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_dialog_email" />
+        android:src="@android:drawable/ic_dialog_alert" />
     </LinearLayout>

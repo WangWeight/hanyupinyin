@@ -26,7 +26,6 @@
 
             </LinearLayout>-->
             <TextView
-
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/toolbar_margin"
@@ -62,10 +61,21 @@
                 android:layout_marginLeft="@dimen/toolbar_margin"
                 android:text="GPS卫星数:"/>
             <TextView
-            android:id="@+id/gps_count"
+                android:id="@+id/gps_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"/>
+            <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0"/>
+            android:layout_marginLeft="@dimen/toolbar_margin"
+            android:text="连接状态:"/>
+            <TextView
+                android:id="@+id/is_connected"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N"/>
+
         </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>
