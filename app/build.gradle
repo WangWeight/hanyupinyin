@@ -34,4 +34,7 @@ dependencies {
     compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:support-v4:23.1.1'
     compile 'com.google.android.gms:play-services:8.3.0'
+    compile project(':AMap_2DMap_V2.9.0_20160525')
+    compile project(':AMap_Location_V2.4.1_20160414')
+    compile project(':AMap_Search_V3.3.0_20160616')
 }

@@ -70,7 +70,7 @@ public class AutoflyApplication extends Application {
             if(error == DJISDKError.REGISTRATION_SUCCESS) {
                 Toast.makeText(getApplicationContext(),
                        "Register successfully",
-                        Toast.LENGTH_LONG).show();
+                        Toast.LENGTH_SHORT).show();
                 DJISDKManager.getInstance().startConnectionToProduct();
             } else {
                 Handler handler = new Handler(Looper.getMainLooper());
@@ -89,7 +89,7 @@ public class AutoflyApplication extends Application {
         @Override
         public void onProductChanged(DJIBaseProduct oldProduct, DJIBaseProduct newProduct) {
 
-            Tools.showToast(getApplicationContext(), String.format("onProductChanged oldProduct:%s, newProduct:%s", oldProduct, newProduct));
+            Log.v(TAG, String.format("onProductChanged oldProduct:%s, newProduct:%s", oldProduct, newProduct));
             mProduct = newProduct;
             if(mProduct != null) {
                 mProduct.setDJIBaseProductListener(mDJIBaseProductListener);

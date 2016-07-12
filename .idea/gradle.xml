@@ -9,6 +9,9 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/AMap_2DMap_V2.9.0_20160525" />
+            <option value="$PROJECT_DIR$/AMap_Location_V2.4.1_20160414" />
+            <option value="$PROJECT_DIR$/AMap_Search_V3.3.0_20160616" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/dJISDKLIB" />
           </set>

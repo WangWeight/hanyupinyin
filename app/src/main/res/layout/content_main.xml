@@ -96,19 +96,33 @@
             android:layout_height="wrap_content"
             android:text="0m/s"/>
     </LinearLayout>
+    <SeekBar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/width_sb"
+        android:max="100"
+        android:progress="5"/>
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/camer_fab"
+        android:id="@+id/start_fab"
         android:layout_width="144dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
+        android:layout_gravity="bottom|start"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_dialog_map"
+        android:src="@android:drawable/ic_media_play"
         android:layout_weight="0.17" />
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/gimbal_fab"
+        android:id="@+id/pause_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center|end"
+        android:layout_gravity="bottom|center"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_dialog_alert" />
+        android:src="@android:drawable/ic_media_pause" />
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/resume_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@android:drawable/ic_media_rew" />
+
     </LinearLayout>

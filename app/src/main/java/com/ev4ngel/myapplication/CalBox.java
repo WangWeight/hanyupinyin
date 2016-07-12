@@ -239,7 +239,7 @@ public class CalBox {
         }
         else {
             shu13List = calcOneLinePlanPointList(point1, point2, dianJianGe);
-            shu24List = calcOneLinePlanPointList(point3, coorPosiCalc(point2.getLongitude(), point2.getLatitude(), coorNageCalcDistance(point1,point2), angle13), dianJianGe);
+            shu24List = calcOneLinePlanPointList(point3, coorPosiCalc(point3.getLongitude(), point3.getLatitude(), coorNageCalcDistance(point1,point2), angle13), dianJianGe);
         }
         for (int i=0;i<shu13List.size();i++) {//是不是应该有等于？
             tempList=new ArrayList<>();

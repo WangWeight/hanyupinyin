@@ -11,7 +11,11 @@ import dji.sdk.util.DJILocationCoordinate2D;
 public class Tools {
     public static void showToast(Context c,String msg)
     {
-        Toast.makeText(c,msg,Toast.LENGTH_LONG).show();
+        Toast.makeText(c,msg,Toast.LENGTH_SHORT).show();
+    }
+    public static void i(Context c,String msg)
+    {
+        Toast.makeText(c,msg,Toast.LENGTH_SHORT).show();
     }
     public DJILocationCoordinate2D getLocationByDistanceAndAngle(DJILocationCoordinate2D loc,float angle)
     {
