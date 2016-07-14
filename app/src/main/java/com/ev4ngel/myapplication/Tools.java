@@ -23,4 +23,21 @@ public class Tools {
         double lng=loc.longitude+0.01;
         return new DJILocationCoordinate2D(lat,lng);
     }
+    public static String lat(double _lat)
+    {
+            return "Lat:"+_lat;
+    }
+    public static String lng(double _lng)
+    {
+        return "Lng:"+_lng;
+    }
+    public static String height(float _h)
+    {
+        return "Ht:"+_h;
+    }
+    public static String isConnect(boolean yes)
+    {
+        return "连接状态:"+(yes?Common.is_connected_yes:Common.is_connected_no);
+    }
+
 }

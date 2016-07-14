@@ -1,8 +1,10 @@
 package com.ev4ngel.myapplication;
 
 import java.util.ArrayList;
+import java.util.IllegalFormatException;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
@@ -13,6 +15,8 @@ import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.location.AMapLocationClientOption.AMapLocationMode;
+import com.amap.api.location.CoordinateConverter;
+import com.amap.api.location.DPoint;
 import com.amap.api.maps2d.AMap;
 import com.amap.api.maps2d.LocationSource;
 import com.amap.api.maps2d.MapView;
@@ -24,6 +28,10 @@ import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.Polygon;
 import com.amap.api.maps2d.model.PolygonOptions;
+import com.amap.api.maps2d.model.Polyline;
+import com.amap.api.maps2d.model.PolylineOptions;
+
+import dji.sdk.FlightController.DJIFlightControllerDataType;
 
 
 public class Map implements OnMapClickListener, AMapLocationListener ,LocationSource{
@@ -33,7 +41,7 @@ public class Map implements OnMapClickListener, AMapLocationListener ,LocationSo
 	ArrayList<LatLng> mPoints;
 	Polygon mArea=null;
 	Marker mPlane=null;
-	View mView=null;
+	//View mView=null;
 	AMapLocationClient mLocClient=null;
 	AMapLocationClientOption mLocCliOpt=null;
 public void onCreate(Bundle savedInstanceState)
@@ -56,10 +64,10 @@ public void onCreate(Bundle savedInstanceState)
     mPlane=new Marker(planeOpt);
     
 }
-	public Map(MapView mapview,View view) {
+	public Map(MapView mapview) {
 		// TODO Auto-generated constructor stub
 		mMapView=mapview;
-		mView=view;
+		//mView=view;
 	    //
 	       
 	}
@@ -91,10 +99,10 @@ public void onCreate(Bundle savedInstanceState)
 	    	if(mListener!=null&&arg0!=null &&arg0.getErrorCode()==0)
 	    	{
 	    		mListener.onLocationChanged(arg0);
-	    		Tools.i(mMapView.getContext(), "Locate on " + arg0.getAddress());
+	    		//Tools.i(mMapView.getContext(), "Locate on " + arg0.getAddress());
 	    	}else
 	    	{
-	    		Tools.i(mMapView.getContext(),"Locate fail");
+	    		//Tools.i(mMapView.getContext(),"Locate fail");
 	    	}
 	    }
 	    
@@ -120,7 +128,7 @@ public void onCreate(Bundle savedInstanceState)
 		mPoints.add(arg0);
 		mArea.setPoints(mPoints);
 		
-
+/*
 		if(mPoints.size()>0 &&mPoints.size()%3==0)
 		{
 			
@@ -130,7 +138,8 @@ public void onCreate(Bundle savedInstanceState)
 		else
 		{
 			mView.setVisibility(View.GONE);
-		}
+		}*/
+
 		Tools.i(mMapView.getContext(), "Lat:"+arg0.latitude+"\nLng"+arg0.longitude);
 		
 	}
@@ -170,6 +179,33 @@ public void onCreate(Bundle savedInstanceState)
 			mLocClient=null;
 		}
 		
+	}
+	public void drawWaypoints(ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> list,Context c)
+	{
+		ArrayList<LatLng> tmpPoints=new ArrayList<>();
+		for(DJIFlightControllerDataType.DJILocationCoordinate2D loc:list)
+		{
+			Marker m=mMap.addMarker(new MarkerOptions());
+			CoordinateConverter cc=new CoordinateConverter(c);
+			cc.from(CoordinateConverter.CoordType.GPS);
+			DPoint p=null;
+			try {
+				cc.coord(new DPoint(loc.getLatitude(), loc.getLongitude()));
+				p=cc.convert();
+
+			}catch (Exception e)
+			{
+			}
+			LatLng tmp=new LatLng(p.getLatitude(),p.getLongitude());
+			m.setPosition(tmp);
+			tmpPoints.add(tmp);
+		}
+		Polyline pl= mMap.addPolyline(new PolylineOptions());
+		pl.setPoints(tmpPoints);
+	}
+	public void clearMap()
+	{
+
 	}
 
 }

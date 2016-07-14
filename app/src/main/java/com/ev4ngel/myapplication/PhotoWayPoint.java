@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import dji.sdk.FlightController.DJIFlightControllerDataType;
 import dji.sdk.util.DJILocationCoordinate2D;
 
 /**
@@ -37,15 +38,12 @@ public class PhotoWayPoint {
     public String startTime="";
     public String stopTime="";
     public ArrayList<PhotoInfo> photos;
-    private Context mContext;
-    public PhotoWayPoint(Context context)
+    public PhotoWayPoint()
     {
-        mContext=context;
         photos=new ArrayList<PhotoInfo>();
     }
-    public PhotoWayPoint(Context context,JSONObject jObj)
+    public PhotoWayPoint(JSONObject jObj)
     {
-        mContext=context;
         photos=new ArrayList<PhotoInfo>();
         fromJson(jObj);
     }
@@ -53,10 +51,10 @@ public class PhotoWayPoint {
     {
         photos.add(new PhotoInfo(pname, yaw, pitch));
     }
-    public void setPosition(DJILocationCoordinate2D loc)
+    public void setPosition(DJIFlightControllerDataType.DJILocationCoordinate2D loc)
     {
-        lat=loc.latitude;
-        lng=loc.longitude;
+        lat=loc.getLatitude();
+        lng=loc.getLongitude();
     }
     public void addPhoto(PhotoInfo pi)
     {

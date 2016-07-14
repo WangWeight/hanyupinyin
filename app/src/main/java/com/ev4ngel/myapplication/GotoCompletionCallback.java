@@ -30,10 +30,9 @@ public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCal
     private PhotoWayPoint pwPoint;
     private DJIFlightController mFC;
     private int mDirection=1;//旋转方向，0为逆时针，1为顺时针
-    public GotoCompletionCallback(Context context,DJIFlightController fcontrol, DJIGimbal gimbal,DJICamera camera,int direction,PhotoWayPointFile f)
+    public GotoCompletionCallback(DJIFlightController fcontrol, DJIGimbal gimbal,DJICamera camera,int direction,PhotoWayPointFile f)
     {
-        pwPoint=new PhotoWayPoint(context);
-        mContext=context;
+        pwPoint=new PhotoWayPoint();
         mGimbal=gimbal;
         mCamera=camera;
         mFC=fcontrol;
@@ -117,7 +116,6 @@ public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCal
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
             }
             pwPoint.stopTime=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         }

@@ -28,18 +28,35 @@ import java.util.PriorityQueue;
  "Photos" : [{"Name" : "DJI_111.jpg","Yaw" : 1,"Pitch" : 3}]}}
  ]*
  */
+
 public class PhotoWayPointFile {
     private String fileName="";
     public FileOutputStream fos=null;
     public ArrayList<PhotoWayPoint> WayPoints;
-    private Context mContext;
-    public PhotoWayPointFile(Context context,String wpfName)
+
+    public PhotoWayPointFile(String wpfName)
     {
-        mContext=context;
-        fileName=wpfName;
+
+        fileName=PhotoWayPointFile.get_way_points_dir()+wpfName;
         WayPoints=new ArrayList<PhotoWayPoint>();
         read();
 
+    }
+    public static String get_way_points_dir()
+    {
+
+        String full_wpf_dir= Common.app_dir+Common.wpf_dir;
+        File ffull=new File(full_wpf_dir);
+        if(!ffull.exists())
+        {
+            try{
+                ffull.mkdirs();
+            }catch (SecurityException se)
+            {
+
+            }
+        }
+        return full_wpf_dir;
     }
     public void write(String fn)
     {
@@ -52,7 +69,6 @@ public class PhotoWayPointFile {
             }
             fos.write(jwps.toString().getBytes());
             fos.close();
-            Toast.makeText(mContext, "Success", Toast.LENGTH_LONG).show();
         }catch(Exception e)
         {
 
@@ -76,19 +92,18 @@ public class PhotoWayPointFile {
                     JSONArray jWaypoints = new JSONArray(new JSONTokener(new String(b)));
                     for(int i=0;i<jWaypoints.length();i++)
                     {
-                        PhotoWayPoint wp=new PhotoWayPoint(mContext,(JSONObject)jWaypoints.get(i));
+                        PhotoWayPoint wp=new PhotoWayPoint((JSONObject)jWaypoints.get(i));
                         WayPoints.add(wp);
                     }
-                    Toast.makeText(mContext, ""+WayPoints.size(),Toast.LENGTH_LONG).show();
                 }
                 catch(JSONException e)
                 {
-                    Toast.makeText(mContext,"fk", Toast.LENGTH_LONG).show();
+
                 }
             }
             catch(IOException e)
             {
-                Toast.makeText(mContext,"fk1", Toast.LENGTH_LONG).show();
+
             }
         }
         else
@@ -97,7 +112,7 @@ public class PhotoWayPointFile {
                 fos = new FileOutputStream(f);
             }catch(IOException e)
             {
-                Toast.makeText(mContext,"fk2", Toast.LENGTH_LONG).show();
+
             }
         }
     }

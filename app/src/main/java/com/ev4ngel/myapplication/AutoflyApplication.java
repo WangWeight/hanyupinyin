@@ -142,5 +142,20 @@ public class AutoflyApplication extends Application {
             }
         };
     };
-
+    public boolean isPhantom()
+    {
+        if(isAircraftConnected())
+        {
+            return (mProduct.getModel()== DJIBaseProduct.Model.Phantom_3_4K)||(mProduct.getModel()== DJIBaseProduct.Model.Phantom_3_Professional)||(mProduct.getModel()== DJIBaseProduct.Model.Phantom_3_Advanced)||(mProduct.getModel()== DJIBaseProduct.Model.Phantom_3_Standard)||(mProduct.getModel()== DJIBaseProduct.Model.Phantom_4);
+        }
+        return false;
+    }
+    public static boolean isInspire()
+    {
+        if(isAircraftConnected())
+        {
+            return  (mProduct.getModel()== DJIBaseProduct.Model.Inspire_1)||(mProduct.getModel()== DJIBaseProduct.Model.Inspire_1_Pro)||(mProduct.getModel()== DJIBaseProduct.Model.Inspire_1_Raw);
+        }
+        return false;
+    }
 }

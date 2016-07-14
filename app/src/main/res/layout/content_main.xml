@@ -75,16 +75,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0m/s"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/toolbar_margin"
-            android:text="y速度:"/>
-        <TextView
-            android:id="@+id/y_speed_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0m/s"/>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -96,12 +87,69 @@
             android:layout_height="wrap_content"
             android:text="0m/s"/>
     </LinearLayout>
-    <SeekBar
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/width_sb"
-        android:max="100"
-        android:progress="5"/>
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/toolbar_margin"
+            android:text="间距:"/>
+        <TextView
+            android:id="@+id/line_space"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0m"/>
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/width_sb"
+            android:max="100"
+            android:progress="30"/>
+    </LinearLayout>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/gen_pl_bt"
+        android:text="生成航点"
+        android:layout_weight="1"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/prepare_bt"
+        android:text="准备"
+        android:layout_weight="1"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/start_bt"
+        android:text="开始"
+        android:layout_weight="1"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/pause_bt"
+        android:text="暂停"
+        android:layout_weight="1"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/resume_bt"
+        android:text="继续"
+        android:layout_weight="1"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/stop_bt"
+        android:text="结束"
+        android:layout_weight="1"/>
+</LinearLayout>
+    <!--
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/start_fab"
         android:layout_width="144dp"
@@ -123,6 +171,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_media_rew" />
+        android:src="@android:drawable/ic_media_rew" />-->
 
     </LinearLayout>

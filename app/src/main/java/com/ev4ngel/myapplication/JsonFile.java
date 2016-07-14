@@ -1,8 +1,12 @@
 package com.ev4ngel.myapplication;
 
 import android.content.Context;
+
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+
 import org.json.*;
 class JsonFile{
 	private FileOutputStream mFos;
@@ -40,10 +44,22 @@ class JsonFile{
 	}
 	public void save()
 	{
-		mFos.write(mContent.getBytes());
+		try {
+			mFos.write(mContent.getBytes());
+            mFos.flush();
+		}catch(IOException ioe)
+		{
+
+		}
 	}
 	public void close()
 	{
-		mFos.close();
+
+		try{
+			mFos.close();
+		}catch(IOException e)
+		{
+
+		}
 	}
 }

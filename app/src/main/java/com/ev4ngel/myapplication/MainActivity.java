@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.design.widget.FloatingActionButton;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -17,9 +18,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.amap.api.maps2d.MapView;
+import com.amap.api.maps2d.model.Polygon;
 
 import org.w3c.dom.Text;
 
@@ -56,7 +61,7 @@ public class MainActivity extends AppCompatActivity
         DJIFlightControllerDelegate.FlightControllerUpdateSystemStateCallback,
         View.OnClickListener,
         View.OnLongClickListener,
-        SeekBar.OnSeekBarChangeListener{
+        SeekBar.OnSeekBarChangeListener {
 
 
     private DJIGimbal gimbal = null;
@@ -73,11 +78,13 @@ public class MainActivity extends AppCompatActivity
     private View airlinePage;//航线页面
     private View settingPage;//设置页面
     private View camOrMapPage;//相机/地图页面
+    private View mapPage;
     private TextView gpsCountView;//gps数量显示
     private TextView batteryRemainView;//电池电量显示
     private TextView batteryVolView;//
     private TextView isConnectedView;
     private TextView velX;
+    private TextView line_space_view;
     private TextView velY;
     private TextView velZ;
     private TextView posLat;//
@@ -85,87 +92,84 @@ public class MainActivity extends AppCompatActivity
     private TextView posHeight;//
     private TextView attitudeView;//
     private TextView batteryTempView;
-    private FloatingActionButton startFab;
-    private FloatingActionButton pauseFab;
-    private FloatingActionButton resumeFab;
+    //private FloatingActionButton startFab;
+    //private FloatingActionButton pauseFab;
+    //private FloatingActionButton resumeFab;
     private PhotoWayPointFile mPWPFile;
     private BatteryStateUpdateCallback batterCallback;
-    private int line_width=0;
-private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=null;
-    DJIFlightControllerDataType.DJILocationCoordinate3D[] mArray={
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.803368,123.427194,0),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.802,123.42736,0),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.80197,123.427923,0),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.8036444,123.4270,40),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.80307748,123.42775835,40),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.80296111,123.42776389,40),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.801,123.429,40),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.80308740,123.42791413,40),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.80320436,123.42790864,40),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.80321389,123.42805833,40),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.80309692,123.42806390,40),
-            new DJIFlightControllerDataType.DJILocationCoordinate3D(41.801,123.4268,40)};
+    private int line_width = 40;
+
+    //tools
+    T log;
+    private Map mMap=null;
+    private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> boundary = null;
+    private CustomMission mCM = null;
+    private int fly_speed = 15;
+    private int rotate_speed = 90;
 
     protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            //refreshUI();
-            Tools.showToast(getApplicationContext(),"Receive Broadcast,air connect is "+AutoflyApplication.isAircraftConnected());
+            Tools.showToast(getApplicationContext(), "Receive Broadcast,air connect is " + AutoflyApplication.isAircraftConnected());
             if (AutoflyApplication.isAircraftConnected()) {
-                //camFab.setBackgroundColor(getResources().getDrawable(R.drawable.box));
-                //gimbalFab.setEnabled(true);
-
-                //Tools.showToast(getApplicationContext(), "Connection Success");
                 getCamera();
                 getGimbal();
                 getBattery();
                 getFlightController();
                 registerComponentListener();
                 isConnectedView.setText(Common.is_connected_yes);
-                if(mMissonManager==null) {
+                if (mMissonManager == null) {
                     mMissonManager = DJIMissionManager.getInstance();
-                    //prepareMissions();
                 }
+                mCM.initComponet(flightController,gimbal,camera);
             } else {
                 isConnectedView.setText(Common.is_connected_no);
-                mMissonManager=null;
-                camera=null;
-                battery=null;
-                gimbal=null;
-                flightController=null;
+                mMissonManager = null;
+                camera = null;
+                battery = null;
+                gimbal = null;
+                flightController = null;
             }
         }
     };
 
     public void registerComponentListener() {
         //battery.setBatteryStateUpdateCallback(this);
-        //camera.setDJICameraGeneratedNewMediaFileCallback(this);
+        //camera.setDJICameraGeneratedNewMediaFileCallback(mCM);
         //flightController.setUpdateSystemStateCallback(this);
 
     }
 
 
-    public void registerUiListener(){
-        startFab.setOnClickListener(this);
-        pauseFab.setOnClickListener(this);
-        resumeFab.setOnClickListener(this);
+    public void registerUiListener() {
+        ((Button) findViewById(R.id.start_bt)).setOnClickListener(this);
+        ((Button) findViewById(R.id.pause_bt)).setOnClickListener(this);
+        ((Button) findViewById(R.id.resume_bt)).setOnClickListener(this);
+        ((Button) findViewById(R.id.stop_bt)).setOnClickListener(this);
+        ((Button) findViewById(R.id.prepare_bt)).setOnClickListener(this);
+        ((Button) findViewById(R.id.show_pl_bt)).setOnClickListener(this);
+        ((Button) findViewById(R.id.clear_pl_bt)).setOnClickListener(this);
+        ((Button) findViewById(R.id.gen_pl_bt)).setOnClickListener(this);
 
-   }
 
-    private DJIBaseProduct getProduct()
-    {
+        //startFab.setOnClickListener(this);
+        //pauseFab.setOnClickListener(this);
+        //resumeFab.setOnClickListener(this);
+
+    }
+
+    private DJIBaseProduct getProduct() {
         try {
             return AutoflyApplication.getProductInstance();
-        }catch(Exception e)
-        {
-            Tools.showToast(getApplicationContext(),e.getMessage());
+        } catch (Exception e) {
+            Tools.showToast(getApplicationContext(), e.getMessage());
         }
         return null;
     }
+
     private void getGimbal()//初始化云台
     {
-        if( AutoflyApplication.isAircraftConnected()&&gimbal==null)
-        {
+        if (AutoflyApplication.isAircraftConnected() && gimbal == null) {
             gimbal = getProduct().getGimbal();
             /*
             if (gimbal == null) {
@@ -178,25 +182,24 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
         }
 
     }
+
     private void getCamera()//初始化相机
     {
-        if(AutoflyApplication.isAircraftConnected() && camera==null)
-        {
+        if (AutoflyApplication.isAircraftConnected() && camera == null) {
             camera = getProduct().getCamera();
 
             if (camera == null) {
                 Tools.showToast(getApplicationContext(), "Init Camera Fail");
-            }
-            else
-                Tools.showToast(getApplicationContext(),"Init Camera successful");
+            } else
+                Tools.showToast(getApplicationContext(), "Init Camera successful");
                 /**/
-    }
+        }
 
     }
+
     private void getBattery()//初始化电池
     {
-        if(AutoflyApplication.isAircraftConnected()&&battery==null)
-        {
+        if (AutoflyApplication.isAircraftConnected() && battery == null) {
             battery = getProduct().getBattery();
             /*
             if (battery == null) {
@@ -207,11 +210,12 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
         }
 
     }
+
     private void getFlightController()//初始化飞控
     {
-            if (AutoflyApplication.getAircraftInstance() != null) {
-                if(flightController==null)
-                    flightController = AutoflyApplication.getAircraftInstance().getFlightController();
+        if (AutoflyApplication.getAircraftInstance() != null) {
+            if (flightController == null)
+                flightController = AutoflyApplication.getAircraftInstance().getFlightController();
               /*
                 if (flightController == null) {
                     Tools.showToast(getApplicationContext(), "Init flightc Fail");
@@ -219,194 +223,119 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
                     Tools.showToast(getApplicationContext(), "Init flightc Successful");
                 }
                 */
-            }
-    }
-    private void prepareMissions()
-    {
-        if(mMissonManager!=null && mMission!=null)
-        mMissonManager.prepareMission(mMission, new DJIMission.DJIMissionProgressHandler() {
-            @Override
-            public void onProgress(DJIMission.DJIProgressType djiProgressType, float v) {
-                Tools.i(getApplicationContext(), "on progress");
-            }
-        }, new DJIBaseComponent.DJICompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                if(djiError==null) {
-                    Tools.i(getApplicationContext(), "Prepare mission OK");
-                }
-                else
-                {
-                    Tools.i(getApplicationContext(), "Prepare mission fail on result");
-                }
-            }
-        });
-    }
-
-    private void generateMissions()
-    {
-        CalBox cb=new CalBox();
-        yArray=cb.calcPlanPointList(mArray[0].getCoordinate2D(),mArray[1].getCoordinate2D(),mArray[2].getCoordinate2D(),line_width);
-        ArrayList<DJIMissionStep> steps=new ArrayList<DJIMissionStep>() ;
-        for(int i=0;i<yArray.size();i++)
-        {
-            final int ii=i;
-            if(yArray.get(ii)!=null) {
-                DJIGoToStep gotoStep = new DJIGoToStep(yArray.get(ii).getLatitude(), yArray.get(ii).getLongitude(), new DJIBaseComponent.DJICompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        if(djiError==null)
-                            Tools.i(getApplicationContext(), "Finish step "+ii);
-                        else
-                        {
-                            Tools.i(getApplicationContext(), "Fail step :"+djiError.getDescription());
-                        }
-                    }
-                });
-                steps.add(gotoStep);
-                //摄像头角度下视
-                steps.add(new DJIGimbalAttitudeStep(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle,
-                        new DJIGimbal.DJIGimbalAngleRotation(true, -90, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIGimbal.DJIGimbalAngleRotation(false, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIGimbal.DJIGimbalAngleRotation(false, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIBaseComponent.DJICompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJIBaseComponent.DJICompletionCallback() {
-                                    @Override
-                                    public void onResult(DJIError djiError) {
-                                        if(djiError==null)
-                                        {
-                                            T.i(getApplicationContext(),"Photo ok");
-                                        }
-                                    }
-                                });
-                            }
-                        }
-                ));
-                ///摄像头角度45度
-                steps.add(new DJIGimbalAttitudeStep(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle,
-                        new DJIGimbal.DJIGimbalAngleRotation(true, -45, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIGimbal.DJIGimbalAngleRotation(false, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIGimbal.DJIGimbalAngleRotation(false, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIBaseComponent.DJICompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJIBaseComponent.DJICompletionCallback() {
-                                    @Override
-                                    public void onResult(DJIError djiError) {
-                                        if(djiError==null)
-                                        {
-                                            T.i(getApplicationContext(),"Photo ok");
-                                        }
-                                    }
-                                });
-                            }
-                        }
-                ));
-                for(int j=0;j<3;j++) {//三次旋转拍照
-                    DJIAircraftYawStep yawStep = new DJIAircraftYawStep(90, 20, new DJIBaseComponent.DJICompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if(djiError==null)//成功后拍照
-                            {
-                                camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJIBaseComponent.DJICompletionCallback() {
-                                    @Override
-                                    public void onResult(DJIError djiError) {
-                                        if(djiError==null)
-                                        {
-                                            T.i(getApplicationContext(),"Photo ok");
-                                        }
-                                    }
-                                });
-                            }
-
-                        }
-                    });
-                    steps.add(yawStep);
-                }
-            }/**/
         }
-
-
-        mMission=new DJICustomMission(steps);
     }
 
-    private void resetCameraPosition()
-    {
-        if(gimbal!=null)
-        {
+    private void prepareMissions() {
+        if (mMissonManager != null && mMission != null)
+            mMissonManager.prepareMission(mMission, new DJIMission.DJIMissionProgressHandler() {
+                @Override
+                public void onProgress(DJIMission.DJIProgressType djiProgressType, float v) {
+                    log.i("on progress");
+                }
+            }, new DJIBaseComponent.DJICompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
+                        log.i("Prepare mission OK");
+                    } else {
+                        log.i("Prepare mission fail on result");
+                    }
+                }
+            });
+    }
+
+    private void resetCameraPosition() {
+        if (gimbal != null) {
             try {
                 DJIGimbal.DJIGimbalAngleRotation
                         mPitchRotation = new DJIGimbal.DJIGimbalAngleRotation(true, -90, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
                         mYawRotation = new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
                         mRollRotation = new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise);
                 gimbal.rotateGimbalByAngle(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle, mPitchRotation, mYawRotation, mRollRotation, null);//
+            } catch (Exception e) {
+                log.i("In reset,exception" + e.getMessage());
             }
-            catch (Exception e)
-            {
-                Tools.showToast(getApplicationContext(),"In reset,exception"+e.getMessage());
-            }
-        }
-        else
-        {
-            Tools.showToast(getApplicationContext(),"In reset,gimbal null");
+        } else {
+            log.i("In reset,gimbal null");
         }
     }
 
 
-    private void initUi()
-    {
+    private void initUi() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        projectPage=findViewById(R.id.project);
-        airlinePage=findViewById(R.id.airline);//).setVisibility(View.GONE);
-        camOrMapPage=findViewById(R.id.cam_or_map);//).setVisibility(View.GONE);
-        settingPage=findViewById(R.id.setting);//).setVisibility(View.GONE);
-        gpsCountView=(TextView)findViewById(R.id.gps_count);
-        batteryRemainView=(TextView)findViewById(R.id.battery_view);
-        batteryVolView=(TextView)findViewById(R.id.battery_vol_view);
-        batteryTempView=(TextView)findViewById(R.id.battery_temp_view);
-        startFab=(FloatingActionButton)findViewById(R.id.start_fab);
-        pauseFab=(FloatingActionButton)findViewById(R.id.pause_fab);
-        resumeFab=(FloatingActionButton)findViewById(R.id.resume_fab);
+        projectPage = findViewById(R.id.project);
+        airlinePage = findViewById(R.id.airline);//).setVisibility(View.GONE);
+        camOrMapPage = findViewById(R.id.cam_or_map);//).setVisibility(View.GONE);
+        settingPage = findViewById(R.id.setting);//).setVisibility(View.GONE);
+        mapPage=findViewById(R.id.map);
+        gpsCountView = (TextView) findViewById(R.id.gps_count);
+        batteryRemainView = (TextView) findViewById(R.id.battery_view);
+        batteryVolView = (TextView) findViewById(R.id.battery_vol_view);
+        batteryTempView = (TextView) findViewById(R.id.battery_temp_view);
+        //startFab=(FloatingActionButton)findViewById(R.id.start_fab);
+        //pauseFab=(FloatingActionButton)findViewById(R.id.pause_fab);
+        //resumeFab=(FloatingActionButton)findViewById(R.id.resume_fab);
         //camFab.setBackground(getResources().getDrawable(R.drawable.box,getTheme()));
-        isConnectedView=(TextView)findViewById(R.id.is_connected);
-        velZ=(TextView)findViewById(R.id.y_speed_view);
+        isConnectedView = (TextView) findViewById(R.id.is_connected);
+        line_space_view = (TextView) findViewById(R.id.line_space);
         //gimbalFab.setBackgroundColor(getResources().getColor(R.color.fad_invalid,getTheme()));
+        ((SeekBar) findViewById(R.id.fly_speed_sb)).setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                ((TextView) findViewById(R.id.fly_speed_tv)).setText(progress + "m/s");
+                fly_speed = progress;
+            }
 
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
 
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        ((SeekBar) findViewById(R.id.rotate_speed_sb)).setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                ((TextView) findViewById(R.id.rotate_speed_tv)).setText(progress + "d/s");
+                rotate_speed = progress;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        mMap=new Map((MapView)findViewById(R.id.map_view));
 
     }
 
-    private void initParams()
-    {
-        missionLocations=new ArrayList<ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>>();
-        //mPWPFile=new PhotoWayPointFile(getApplicationContext(),"");
-
-        missionLocations.add(new ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>());
-        missionLocations.add(new ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>());
-        missionLocations.add(new ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>());
-        for(int i=0;i<mArray.length/3;i++)
-        {
-            missionLocations.get(i/3).add(mArray[i]);
-        }
-        //getGimbal();
-        //getCamera();
-        //getBattery();
+    private void initParams() {
         initUi();
         setPageInvisibility();//设置所有page不可见
         projectPage.setVisibility(View.VISIBLE);//将project设置可见
         registerUiListener();
+        if(mCM==null)
+            mCM = new CustomMission(log);
     }
-    private void setPageInvisibility()
-    {
+
+    private void setPageInvisibility() {
         projectPage.setVisibility(View.GONE);
         airlinePage.setVisibility(View.GONE);
         camOrMapPage.setVisibility(View.GONE);
         settingPage.setVisibility(View.GONE);
+        mapPage.setVisibility(View.GONE);
     }
-    private void _registerReceiver()
-    {
+
+    private void _registerReceiver() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(AutoflyApplication.FLAG_CONNECTION_CHANGE);
         registerReceiver(mReceiver, filter);
@@ -417,8 +346,11 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initParams();
+
+        //init in initUi
+        mMap.onCreate(savedInstanceState);
         _registerReceiver();
-        batterCallback=new BatteryStateUpdateCallback(batteryVolView,batteryRemainView,batteryTempView);
+        batterCallback = new BatteryStateUpdateCallback(batteryVolView, batteryRemainView, batteryTempView);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -427,10 +359,12 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        ((SeekBar)findViewById(R.id.width_sb)).setOnSeekBarChangeListener(this);
-        //for(int i=0;i<mArray.length;i++)
-        //    yArray.add(mArray[i].getCoordinate2D());
-
+        ((SeekBar) findViewById(R.id.width_sb)).setOnSeekBarChangeListener(this);
+        log = new T(getApplicationContext());
+        boundary = new ArrayList<>();
+        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.80330186461993, 123.4272593763365));
+        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.80263352027026, 123.4288344686314));
+        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.80167311762926, 123.4283742325656));
     }
 
     @Override
@@ -442,7 +376,6 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
             super.onBackPressed();
         }
     }
-
 
 
     @Override
@@ -481,10 +414,14 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
             airlinePage.setVisibility(View.VISIBLE);
         } else if (id == R.id.nav_cam_or_map) {
             setPageInvisibility();
-           camOrMapPage.setVisibility(View.VISIBLE);
+            camOrMapPage.setVisibility(View.VISIBLE);
         } else if (id == R.id.nav_settings) {
             setPageInvisibility();
             settingPage.setVisibility(View.VISIBLE);
+        }
+            else if (id == R.id.nav_map) {
+                setPageInvisibility();
+                mapPage.setVisibility(View.VISIBLE);
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
@@ -496,11 +433,30 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
     }
 
 
-  @Override
+    @Override
     protected void onDestroy() {
         ///getApplicationContext().unregisterReceiver(mReceiver);
         super.onDestroy();
-      unregisterReceiver(mReceiver);
+        unregisterReceiver(mReceiver);
+        mMap.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mMap.onPause();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        mMap.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mMap.onResume();
     }
 
     @Override
@@ -512,7 +468,7 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
                 break;
         }
 
-        if(!msg.equals("")) {
+        if (!msg.equals("")) {
             Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
         }
         return false;
@@ -527,17 +483,17 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
     @Override
     public boolean onLongClick(View v) {
         switch (v.getId()) {
-            case R.id.start_fab: {
+            case R.id.start_bt: {
                 if (mMissonManager == null) {
-                    Tools.i(getApplicationContext(), "MissionManager Not OK");
+                    log.i("MissionManager Not OK");
                 } else {
                     mMissonManager.stopMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
                         @Override
                         public void onResult(DJIError djiError) {
                             if (djiError == null) {
-                                T.i(getApplicationContext(), "Mission stop");
+                                log.i("Mission stop");
                             } else {
-                                T.i(getApplicationContext(), "Mission Stop Fail:" + djiError.getDescription());
+                                log.i("Mission Stop Fail:" + djiError.getDescription());
 
                             }
                         }
@@ -546,7 +502,7 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
             }
             ;
             break;
-            case R.id.pause_fab: {
+            case R.id.pause_bt: {
                 if (mMissonManager == null) {
                     Tools.i(getApplicationContext(), "MissionManager Not OK");
                 } else {
@@ -571,9 +527,10 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        line_width=progress;
-        velZ.setText("距离："+progress+"m");
+        line_width = progress;
+        line_space_view.setText(progress + "m");
     }
+
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
 
@@ -586,62 +543,78 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
     public void onStartTrackingTouch(SeekBar seekBar) {
 
     }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.start_fab: {
-                if (mMissonManager == null)
-                {
-                    Tools.i(getApplicationContext(),"MissionManager Not OK");
+            case R.id.gen_pl_bt:{
+                if (mMissonManager == null) {
+                    Tools.i(getApplicationContext(), "MissionManager Not OK");
+                } else {
+                    mCM.initBoundary(boundary);
+                    mCM.generateCoordinates(line_width);
+                    mCM.rotate_speed = rotate_speed;
+                    mCM.fly_speed = fly_speed;
+                    //mMission = (DJICustomMission) mCM.generateMission();
                 }
-                else{
-                    Tools.i(getApplicationContext(),"Starting Mission...");
+            }break;
+            case R.id.prepare_bt: {
+                if (mMissonManager == null) {
+                    Tools.i(getApplicationContext(), "MissionManager Not OK");
+                } else {
+                    getCamera();
+                    if (mMissonManager.mIsCustomMissionExecuting)
+                        mMissonManager.stopMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+                                if (djiError != null) {
+                                    log.i("StopMissionFail");
+                                }
+                            }
+                        });
+                    /*
+                    mCM.initBoundary(boundary);
+                    mCM.generateCoordinates(line_width);
+                    mCM.rotate_speed = rotate_speed;
+                    mCM.fly_speed = fly_speed;
+                    */
+                    mMission = (DJICustomMission) mCM.generateMission();
+                    prepareMissions();
+                }
+            }
+            break;
+            case R.id.start_bt: {
+                if (mMissonManager == null) {
+                    Tools.i(getApplicationContext(), "MissionManager Not OK");
+                } else {
+                    Tools.i(getApplicationContext(), "Starting Mission...");
                     mMissonManager.setMissionExecutionFinishedCallback(new DJIBaseComponent.DJICompletionCallback() {
                         @Override
                         public void onResult(DJIError djiError) {
                             if (djiError == null) {
-                                T.i(getApplicationContext(), "Finish");
+                                log.i("Finish");
                             }
                         }
                     });
                     mMissonManager.startMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        if(djiError==null)
-                        {
-                            Tools.i(getApplicationContext(),"Start mission");
-                        }else
-                        {
-                            Tools.i(getApplicationContext(),"Start Mission Fail:"+djiError.getDescription());
-                        }
-
-                    }
-                });}
-                /*
-                if (AutoflyApplication.isAircraftConnected() && camera != null) {
-                    camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJIBaseComponent.DJICompletionCallback() {
                         @Override
                         public void onResult(DJIError djiError) {
-                            if(djiError!=null)
-                            {
-                                Tools.showToast(getApplicationContext(),"TakePhotoF");
-                            }else
-                            {
-                                Tools.showToast(getApplicationContext(),"TakePhotoS");
+                            if (djiError == null) {
+                                Tools.i(getApplicationContext(), "Start mission");
+                            } else {
+                                Tools.i(getApplicationContext(), "Start Mission Fail:" + djiError.getDescription());
                             }
+
                         }
                     });
-                } else {
-                    Tools.showToast(getApplicationContext(), "Fad Camera Fail");
-                }*/
-            };break;
-            case R.id.pause_fab:
-            {
-                if (mMissonManager == null)
-                {
-                    Tools.i(getApplicationContext(),"MissionManager Not OK");
                 }
-                else {
+
+            }
+            break;
+            case R.id.pause_bt: {
+                if (mMissonManager == null) {
+                    Tools.i(getApplicationContext(), "MissionManager Not OK");
+                } else {
 
                     mMissonManager.pauseMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
                         @Override
@@ -654,79 +627,23 @@ private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> yArray=nu
                         }
                     });
                 }
-                /*
-                if(AutoflyApplication.isAircraftConnected())
-                {
-                    //new GotoCompletionCallback(getApplicationContext(),gimbal,camera,clickcount%2).onResult(null);
-                    //clickcount++;
-                    mMissonManager.startMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            _i("Finished mission");
-                        }
-                    });
-                }
-                else
-                Tools.showToast(getApplicationContext(),"Fad mission Inconnect");
-                */
-            };break;
-            case R.id.resume_fab:
-            {
-                if (mMissonManager == null)
-                {
-                    Tools.i(getApplicationContext(),"MissionManager Not OK");
+
+            }
+            break;
+
+            case R.id.show_pl_bt:{
+                if(mCM.wayPoints.size()>0) {
+                    mMap.drawWaypoints(mCM.wayPoints,getApplicationContext());
                 }
                 else {
-                    getCamera();
-                    if(mMissonManager.mIsCustomMissionExecuting)
-                        mMissonManager.stopMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if(djiError!=null)
-                            {
-                                T.i(getApplicationContext(),"StopMissionFail");
-                            }
-                        }
-                    });
-                    generateMissions();
-                    prepareMissions();
-                    /*
-                    mMissonManager.prepareMission(mMission, new DJIMission.DJIMissionProgressHandler() {
-                        @Override
-                        public void onProgress(DJIMission.DJIProgressType djiProgressType, float v) {
-
-                        }
-                    }, new DJIBaseComponent.DJICompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if(djiError!=null)
-                            {
-                                T.i(getApplicationContext(),djiError.getDescription());
-                            }
-                        }
-                    });
-                    mMissonManager.resumeMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError == null) {
-                                Tools.i(getApplicationContext(), "Resume Mission");
-                            } else {
-                                Tools.i(getApplicationContext(), "Resume Mission Fail");
-                            }
-                        }
-                    });*/
+                    log.i("No waypoints");
                 }
-                /*
-                if(AutoflyApplication.isAircraftConnected())
-                {
-                    Tools.showToast(getApplicationContext(),"connect");
-                    resetCameraPosition();
-                }
-                else
-                    Tools.showToast(getApplicationContext(),"Inconnect");
-                    */
+            }
+            break;
+            case R.id.clear_pl_bt:{
+                mMap.clearMap();
+            }break;
 
-            };break;
         }
     }
 }
