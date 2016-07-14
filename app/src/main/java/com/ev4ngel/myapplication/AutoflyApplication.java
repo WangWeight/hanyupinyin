@@ -1,6 +1,7 @@
 package com.ev4ngel.myapplication;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
@@ -22,6 +23,7 @@ public class AutoflyApplication extends Application {
     private static final String TAG = AutoflyApplication.class.getName();
     public static final String FLAG_CONNECTION_CHANGE = "com_ev4ngel_dji_connection_change";
     private static DJIBaseProduct mProduct;
+    private static Context context;
     private Handler mHandler;
 
 
@@ -58,11 +60,15 @@ public class AutoflyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
+        context=getApplicationContext();
         mHandler = new Handler(Looper.getMainLooper());
         DJISDKManager.getInstance().initSDKManager(this, mDJISDKManagerCallback);
     }
 
+    public static Context getContext()
+    {
+        return context;
+    }
     private DJISDKManager.DJISDKManagerCallback mDJISDKManagerCallback = new DJISDKManager.DJISDKManagerCallback() {
 
         @Override

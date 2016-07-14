@@ -23,6 +23,7 @@ import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.UiSettings;
 import com.amap.api.maps2d.AMap.OnMapClickListener;
 import com.amap.api.maps2d.LocationSource.OnLocationChangedListener;
+import com.amap.api.maps2d.model.BitmapDescriptor;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
@@ -44,6 +45,10 @@ public class Map implements OnMapClickListener, AMapLocationListener ,LocationSo
 	//View mView=null;
 	AMapLocationClient mLocClient=null;
 	AMapLocationClientOption mLocCliOpt=null;
+
+	ArrayList<Marker> wpMarkers=null;
+	ArrayList<LatLng> wpPositions=null;
+	Polyline wpPl=null;
 public void onCreate(Bundle savedInstanceState)
 {
 	
@@ -61,15 +66,14 @@ public void onCreate(Bundle savedInstanceState)
     mPoints=new ArrayList<LatLng>();
     MarkerOptions planeOpt=new MarkerOptions();
     planeOpt.title("Plane");
+	planeOpt.icon(new BitmapDescriptor(AutoflyApplication.getContext().getResources(),R.drawable.ic_m));
     mPlane=new Marker(planeOpt);
     
 }
 	public Map(MapView mapview) {
 		// TODO Auto-generated constructor stub
 		mMapView=mapview;
-		//mView=view;
-	    //
-	       
+
 	}
 
 	  protected void onDestroy() {
@@ -105,10 +109,24 @@ public void onCreate(Bundle savedInstanceState)
 	    		//Tools.i(mMapView.getContext(),"Locate fail");
 	    	}
 	    }
-	    
-	 public void drawPlane()
+	public static LatLng convertFromWGS84(double lat,double lng)
+	{
+		CoordinateConverter cc=new CoordinateConverter(AutoflyApplication.getContext());
+		cc.from(CoordinateConverter.CoordType.GPS);
+		DPoint p=null;
+		try {
+			cc.coord(new DPoint(lat,lng));
+			p=cc.convert();
+		}catch (Exception e)
+		{
+		}
+		return new LatLng(p.getLatitude(),p.getLongitude());
+	}
+
+	 public void drawPlane(double lat,double lng)
 	 {
-		 
+		 mPlane.remove();
+		 mPlane.setPosition(Map.convertFromWGS84(lat,lng));
 	 }
 	@Override
 	public void onMapClick(LatLng arg0) {
@@ -140,7 +158,7 @@ public void onCreate(Bundle savedInstanceState)
 			mView.setVisibility(View.GONE);
 		}*/
 
-		Tools.i(mMapView.getContext(), "Lat:"+arg0.latitude+"\nLng"+arg0.longitude);
+		//Tools.i(mMapView.getContext(), "Lat:"+arg0.latitude+"\nLng"+arg0.longitude);
 		
 	}
 		  
@@ -182,30 +200,27 @@ public void onCreate(Bundle savedInstanceState)
 	}
 	public void drawWaypoints(ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> list,Context c)
 	{
-		ArrayList<LatLng> tmpPoints=new ArrayList<>();
+		clearMap();
 		for(DJIFlightControllerDataType.DJILocationCoordinate2D loc:list)
 		{
 			Marker m=mMap.addMarker(new MarkerOptions());
-			CoordinateConverter cc=new CoordinateConverter(c);
-			cc.from(CoordinateConverter.CoordType.GPS);
-			DPoint p=null;
-			try {
-				cc.coord(new DPoint(loc.getLatitude(), loc.getLongitude()));
-				p=cc.convert();
-
-			}catch (Exception e)
-			{
-			}
-			LatLng tmp=new LatLng(p.getLatitude(),p.getLongitude());
+			LatLng tmp=Map.convertFromWGS84(loc.getLatitude(), loc.getLongitude());
 			m.setPosition(tmp);
-			tmpPoints.add(tmp);
+			wpPositions.add(tmp);
+			wpMarkers.add(m);
 		}
-		Polyline pl= mMap.addPolyline(new PolylineOptions());
-		pl.setPoints(tmpPoints);
+		wpPl= mMap.addPolyline(new PolylineOptions());
+		wpPl.setPoints(wpPositions);
 	}
 	public void clearMap()
 	{
-
+		for(Marker m:wpMarkers)
+		{
+			m.remove();
+		}
+		wpMarkers.removeAll(wpMarkers);
+		wpPositions.removeAll(wpPositions);
+		wpPl.remove();
 	}
 
 }
