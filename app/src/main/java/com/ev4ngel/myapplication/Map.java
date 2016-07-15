@@ -24,6 +24,7 @@ import com.amap.api.maps2d.UiSettings;
 import com.amap.api.maps2d.AMap.OnMapClickListener;
 import com.amap.api.maps2d.LocationSource.OnLocationChangedListener;
 import com.amap.api.maps2d.model.BitmapDescriptor;
+import com.amap.api.maps2d.model.GroundOverlayOptions;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
@@ -49,27 +50,26 @@ public class Map implements OnMapClickListener, AMapLocationListener ,LocationSo
 	ArrayList<Marker> wpMarkers=null;
 	ArrayList<LatLng> wpPositions=null;
 	Polyline wpPl=null;
-public void onCreate(Bundle savedInstanceState)
-{
-	
-	mMapView.onCreate(savedInstanceState);
-    mMap=mMapView.getMap();
-    mMap.setMapType(AMap.MAP_TYPE_SATELLITE);
-    mMap.setOnMapClickListener(this);
-    mMap.setLocationSource(this);
-    mMap.setMyLocationEnabled(true);
-    UiSettings us=mMap.getUiSettings();
-    us.setCompassEnabled(true);
-    us.setMyLocationButtonEnabled(true);
-    us.setScaleControlsEnabled(true);
-    
-    mPoints=new ArrayList<LatLng>();
-    MarkerOptions planeOpt=new MarkerOptions();
-    planeOpt.title("Plane");
-	planeOpt.icon(new BitmapDescriptor(AutoflyApplication.getContext().getResources(),R.drawable.ic_m));
-    mPlane=new Marker(planeOpt);
-    
-}
+	public void onCreate(Bundle savedInstanceState)
+	{
+		mMapView.onCreate(savedInstanceState);
+		mMap=mMapView.getMap();
+		mMap.setMapType(AMap.MAP_TYPE_SATELLITE);
+		mMap.setOnMapClickListener(this);
+		mMap.setLocationSource(this);
+		mMap.setMyLocationEnabled(true);
+		UiSettings us=mMap.getUiSettings();
+		us.setCompassEnabled(true);
+		us.setMyLocationButtonEnabled(true);
+		us.setScaleControlsEnabled(true);
+
+		mPoints=new ArrayList<LatLng>();
+		MarkerOptions planeOpt=new MarkerOptions();
+		planeOpt.title("Plane");
+		planeOpt.icon(new BitmapDescriptor(AutoflyApplication.getContext().getResources(),R.drawable.ic_media_play));
+		mPlane=new Marker(planeOpt);
+
+	}
 	public Map(MapView mapview) {
 		// TODO Auto-generated constructor stub
 		mMapView=mapview;
@@ -175,15 +175,15 @@ public void onCreate(Bundle savedInstanceState)
 			mLocCliOpt.setOnceLocation(false);
 			mLocCliOpt.setWifiActiveScan(true);
 			mLocCliOpt.setGpsFirst(true);
-			mLocCliOpt.setInterval(2000);
+			mLocCliOpt.setInterval(10000);
 			mLocClient.setLocationOption(mLocCliOpt);
 			mLocClient.setLocationListener(this);
 			mLocClient.startLocation();
-			Tools.i(mMapView.getContext(), "Acitvity success");
+			//Tools.i(mMapView.getContext(), "Acitvity success");
 			
 		}else
 		{
-			Tools.i(mMapView.getContext(), "Acitvity fail");
+			//Tools.i(mMapView.getContext(), "Acitvity fail");
 		}
 	}
 	@Override
@@ -196,11 +196,10 @@ public void onCreate(Bundle savedInstanceState)
 			mLocClient.onDestroy();
 			mLocClient=null;
 		}
-		
 	}
 	public void drawWaypoints(ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> list,Context c)
 	{
-		clearMap();
+		clearMap();//clear all markers on the map
 		for(DJIFlightControllerDataType.DJILocationCoordinate2D loc:list)
 		{
 			Marker m=mMap.addMarker(new MarkerOptions());
@@ -221,6 +220,7 @@ public void onCreate(Bundle savedInstanceState)
 		wpMarkers.removeAll(wpMarkers);
 		wpPositions.removeAll(wpPositions);
 		wpPl.remove();
+		mArea.remove();
 	}
 
 }

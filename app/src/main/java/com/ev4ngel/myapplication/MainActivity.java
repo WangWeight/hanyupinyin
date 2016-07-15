@@ -362,9 +362,9 @@ public class MainActivity extends AppCompatActivity
         ((SeekBar) findViewById(R.id.width_sb)).setOnSeekBarChangeListener(this);
         log = new T(getApplicationContext());
         boundary = new ArrayList<>();
-        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.80330186461993, 123.4272593763365));
-        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.80263352027026, 123.4288344686314));
-        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.80167311762926, 123.4283742325656));
+        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.803111, 123.427709));
+        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.803104, 123.428371));
+        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.802767, 123.428412));
     }
 
     @Override

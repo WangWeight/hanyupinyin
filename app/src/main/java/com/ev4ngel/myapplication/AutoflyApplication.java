@@ -75,7 +75,7 @@ public class AutoflyApplication extends Application {
         public void onGetRegisteredResult(DJIError error) {
             if(error == DJISDKError.REGISTRATION_SUCCESS) {
                 Toast.makeText(getApplicationContext(),
-                       "Register successfully",
+                       R.string.sdk_registration_message_success,
                         Toast.LENGTH_SHORT).show();
                 DJISDKManager.getInstance().startConnectionToProduct();
             } else {
@@ -84,7 +84,7 @@ public class AutoflyApplication extends Application {
                     @Override
                     public void run() {
                         Toast.makeText(getApplicationContext(),
-                                R.string.sdk_registration_message,
+                                R.string.sdk_registration_message_fail,
                                 Toast.LENGTH_LONG).show();
                     }
                 });
@@ -148,7 +148,7 @@ public class AutoflyApplication extends Application {
             }
         };
     };
-    public boolean isPhantom()
+    public static boolean isPhantom()
     {
         if(isAircraftConnected())
         {

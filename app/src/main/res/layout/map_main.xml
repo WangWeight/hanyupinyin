@@ -19,7 +19,7 @@
         <Button
             android:id="@+id/clear_pl_bt"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="wrap_con              tent"
             android:text="清空标记"
             android:layout_weight="1"/>
     </LinearLayout>

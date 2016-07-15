@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">Autofly</string>
-
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="action_edit">Edit</string>
     <string name="action_share">Share</string>
     <string name="action_settings">Settings</string>
-    <string name="sdk_registration_message">WhatFuck</string>
+    <string name="sdk_registration_message_fail">Register fail</string>
+    <string name="sdk_registration_message_success">Register successfully</string>
 </resources>
