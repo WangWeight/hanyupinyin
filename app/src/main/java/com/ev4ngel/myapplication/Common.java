@@ -1,4 +1,4 @@
-package com.ev4ngel.myapplication;
+﻿package com.ev4ngel.myapplication;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,5 +17,6 @@ public class Common {
     public static String app_dir="/mnt/sdcard/Autofly/";
     public static String wpf_dir="waypoints/";
     public static String way_points_file="";
+public static int MAX_NUMBER_OF_WAYPOINTS=100;
 
 }
