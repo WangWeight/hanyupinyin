@@ -1,32 +1,35 @@
-package gaodemap.gsdemo.dji.com.testprogram;
+package com.ev4ngel.myapplication;
+
+import com.amap.api.maps2d.model.LatLng;
 
 import java.util.ArrayList;
 
+import dji.sdk.FlightController.DJIFlightControllerDataType;
 
 /**
  * Created by jason on 2016/7/5.
  * version 0.3.1
  */
 
-public class calcBox {
+public class CalcBox {
 
 
-   public dian gaussProjCal(double longitude, double latitude)
+    public dian gaussProjCal(double longitude, double latitude)
     {
         dian point=new dian();
-        int ProjNo = 0; int ZoneWide; ////带宽   
+        int ProjNo = 0; int ZoneWide; ////带宽
         double longitude1, latitude1, longitude0, latitude0, X0, Y0, xval, yval;
         double a, f, e2, ee, NN, T, C, A, M, iPI;
-        iPI = 0.0174532925199433; ////3.1415926535898/180.0;   
-        ZoneWide = 6; ////6度带宽   
-        a = 6378245.0; f = 1.0 / 298.3; //54年北京坐标系参数   
-        ////a=6378140.0; f=1/298.257; //80年西安坐标系参数   
+        iPI = 0.0174532925199433; ////3.1415926535898/180.0;
+        ZoneWide = 6; ////6度带宽
+        a = 6378245.0; f = 1.0 / 298.3; //54年北京坐标系参数
+        ////a=6378140.0; f=1/298.257; //80年西安坐标系参数
         ProjNo = (int)(longitude / ZoneWide);
         longitude0 = ProjNo * ZoneWide + ZoneWide / 2;
         longitude0 = longitude0 * iPI;
         latitude0 = 0;
-        longitude1 = longitude * iPI; //经度转换为弧度  
-        latitude1 = latitude * iPI; //纬度转换为弧度  
+        longitude1 = longitude * iPI; //经度转换为弧度
+        latitude1 = latitude * iPI; //纬度转换为弧度
         e2 = 2 * f - f * f;
         ee = e2 * (1.0 - e2);
         NN = a / Math.sqrt (1.0 - e2 * Math.sin(latitude1) * Math.sin(latitude1));
@@ -56,19 +59,19 @@ public class calcBox {
     public DJIFlightControllerDataType.DJILocationCoordinate2D gaussProjInvCal(double Y,double X)
     {
         DJIFlightControllerDataType.DJILocationCoordinate2D point=new DJIFlightControllerDataType.DJILocationCoordinate2D();
-        int ProjNo; int ZoneWide; ////带宽   
+        int ProjNo; int ZoneWide; ////带宽
         double longitude1, latitude1, longitude0, latitude0, X0, Y0, xval, yval;
         double e1, e2, f, a, ee, NN, T, C, M, D, R, u, fai, iPI;
-        iPI = 0.0174532925199433; ////3.1415926535898/180.0;   
-        a = 6378245.0; f = 1.0 / 298.3; //54年北京坐标系参数   
-        ////a=6378140.0; f=1/298.257; //80年西安坐标系参数   
-        ZoneWide = 6; ////6度带宽   
-        ProjNo = (int)(X / 1000000L); //查找带号  
+        iPI = 0.0174532925199433; ////3.1415926535898/180.0;
+        a = 6378245.0; f = 1.0 / 298.3; //54年北京坐标系参数
+        ////a=6378140.0; f=1/298.257; //80年西安坐标系参数
+        ZoneWide = 6; ////6度带宽
+        ProjNo = (int)(X / 1000000L); //查找带号
         longitude0 = (ProjNo - 1) * ZoneWide + ZoneWide / 2;
-        longitude0 = longitude0 * iPI; //中央经线  
+        longitude0 = longitude0 * iPI; //中央经线
         X0 = ProjNo * 1000000L + 500000L;
         Y0 = 0;
-        xval = X - X0; yval = Y - Y0; //带内大地坐标  
+        xval = X - X0; yval = Y - Y0; //带内大地坐标
         e2 = 2 * f - f * f;
         e1 = (1.0 - Math.sqrt(1 - e2)) / (1.0 + Math.sqrt(1 - e2));
         ee = e2 / (1 - e2);
@@ -83,7 +86,7 @@ public class calcBox {
         R = a * (1 - e2) / Math.sqrt((1 - e2 * Math.sin(fai) * Math.sin(fai)) * (1 - e2 * Math.sin(fai) * Math.sin(fai)) * (1 - e2 * Math.sin
                 (fai) * Math.sin(fai)));
         D = xval / NN;
-        //计算经度(Longitude) 纬度(Latitude)  
+        //计算经度(Longitude) 纬度(Latitude)
         longitude1 = longitude0 + (D - (1 + 2 * T + C) * D * D * D / 6 + (5 - 2 * C + 28 * T - 3 * C * C + 8 * ee + 24 * T * T) * D
                 * D * D * D * D / 120) / Math.cos(fai);
         latitude1 = fai - (NN * Math.tan(fai) / R) * (D * D / 2 - (5 + 3 * T + 10 * C - 4 * C * C - 9 * ee) * D * D * D * D / 24
@@ -177,10 +180,11 @@ public class calcBox {
         resultePoint=gaussProjInvCal(tempPoint.getX(),tempPoint.getY());
         return resultePoint;
     }
+
     //单位是度
     public double coorNageCalcDistance(DJIFlightControllerDataType.DJILocationCoordinate2D point1,DJIFlightControllerDataType.DJILocationCoordinate2D point2){
         dian pointA=gaussProjCal(point1.getLongitude(),point1.getLatitude());
-        dian pointB=gaussProjCal(point2.getLongitude(),point2.getLatitude());
+        dian pointB=gaussProjCal(point2.getLongitude(), point2.getLatitude());
 
         return zuoBiaoFanSuan(pointA,pointB);
     }
@@ -267,7 +271,7 @@ public class calcBox {
             }
             else {
                 //tempList=calcOneLinePlanPointList(shu24List.get(i),shu13List.get(i),dianJianGe);
-                for (int j=tempList.size()-1;j>=0;j--){
+                for (int j= tempList.size()-1;j>=0;j--){
                     pointList.add(tempList.get(j));
                 }
             }
@@ -276,10 +280,10 @@ public class calcBox {
         return pointList;
     }
     private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> calcPlanPointList1(DJIFlightControllerDataType.DJILocationCoordinate2D point1,
-                                                                                             DJIFlightControllerDataType.DJILocationCoordinate2D point2,
-                                                                                             DJIFlightControllerDataType.DJILocationCoordinate2D point3,
-                                                                                             DJIFlightControllerDataType.DJILocationCoordinate2D point4,
-                                                                                             double dianJianGe,double pangXiangJianGe){
+                                                                                              DJIFlightControllerDataType.DJILocationCoordinate2D point2,
+                                                                                              DJIFlightControllerDataType.DJILocationCoordinate2D point3,
+                                                                                              DJIFlightControllerDataType.DJILocationCoordinate2D point4,
+                                                                                              double dianJianGe,double pangXiangJianGe){
         ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> shu13List=calcOneLinePlanPointList(point1,point3,dianJianGe);
         ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> shu24List=calcOneLinePlanPointList(point2,point4,dianJianGe);
         ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> tempList=new ArrayList<>();
@@ -298,15 +302,14 @@ public class calcBox {
                 shu13List = calcOneLinePlanPointList(point1, point3, dianJianGe);
                 shu24List = calcOneLinePlanPointList(point2, point4, dianJianGe);
             }
-        }
-        else {
-            if (pangXiangJianGe!=0){
+        } else {
+            if (pangXiangJianGe != 0) {
                 shu13List = calcOneLinePlanPointList(point1, point2, pangXiangJianGe);
                 shu24List = calcOneLinePlanPointList(point3, point4, pangXiangJianGe);
             }
             else {
-            shu13List = calcOneLinePlanPointList(point1, point2, dianJianGe);
-            shu24List = calcOneLinePlanPointList(point3, point4, dianJianGe);
+                shu13List = calcOneLinePlanPointList(point1, point2, dianJianGe);
+                shu24List = calcOneLinePlanPointList(point3, point4, dianJianGe);
             }
         }
 
@@ -338,7 +341,7 @@ public class calcBox {
                                                                                                    DJIFlightControllerDataType.DJILocationCoordinate2D point2,
                                                                                                    double dianJianGe) {
         double distance = coorNageCalcDistance(point1, point2);
-        double angle=coorNageCalcAngle(point1,point2);
+        double angle = coorNageCalcAngle(point1, point2);
         if (distance<dianJianGe) return null;
         double count = distance / dianJianGe;
 
@@ -373,7 +376,7 @@ public class calcBox {
         ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> resulteList=calcPlanPointList1(sortList.get(0),sortList.get(2),sortList.get(1),sortList.get(3),dianJianGe,0);
 
         return resulteList;
-        //DJIFlightControllerDataType.DJILocationCoordinate2D point4=coorPosiCalc()
+        //DJILocationCoordinate2D point4=coorPosiCalc()
     }
     public ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> calcNearestPlanPointList(DJIFlightControllerDataType.DJILocationCoordinate2D point1,
                                                                                                    DJIFlightControllerDataType.DJILocationCoordinate2D point2,
@@ -396,10 +399,10 @@ public class calcBox {
     }
 
     private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> calcNearest(DJIFlightControllerDataType.DJILocationCoordinate2D point1,
-                                                                                      DJIFlightControllerDataType.DJILocationCoordinate2D point2,
-                                                                                      DJIFlightControllerDataType.DJILocationCoordinate2D point3,
-                                                                                      DJIFlightControllerDataType.DJILocationCoordinate2D point4,
-                                                                                      DJIFlightControllerDataType.DJILocationCoordinate2D startPoint){
+                                                                                       DJIFlightControllerDataType.DJILocationCoordinate2D point2,
+                                                                                       DJIFlightControllerDataType.DJILocationCoordinate2D point3,
+                                                                                       DJIFlightControllerDataType.DJILocationCoordinate2D point4,
+                                                                                       DJIFlightControllerDataType.DJILocationCoordinate2D startPoint){
         ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> resulteList=new ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D>();
         resulteList.add(point1);
         resulteList.add(point2);
@@ -411,14 +414,10 @@ public class calcBox {
                 if (coorNageCalcDistance(startPoint,resulteList.get(i))  >coorNageCalcDistance(startPoint,resulteList.get(j)) ){
                     DJIFlightControllerDataType.DJILocationCoordinate2D temp= resulteList.get(i);
                     resulteList.set(i,resulteList.get(j));
-
                     resulteList.set(j,temp);
-
-
                 }
             }
         }
-
         return resulteList;
     }
 

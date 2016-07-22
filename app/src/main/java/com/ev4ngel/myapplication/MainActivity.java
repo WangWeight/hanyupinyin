@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity
     private DJIMissionManager mMissonManager = null;
     private DJICustomMission mMission = null;
 
+    Project mProject=null;
     //views
     private ArrayList<ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>> missionLocations;
     private Toolbar toolbar;
@@ -645,5 +646,9 @@ public class MainActivity extends AppCompatActivity
             }break;
 
         }
+    }
+    public void onLoadProject(Project p)
+    {
+        mProject=p;
     }
 }

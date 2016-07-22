@@ -6,4 +6,6 @@
 <color name="fad_valid">#80b9fd</color>
     <color name="fad_invalid">#cecece</color>
     <color name="black_overlay">#66000000</color>
+    <color name="colorWhite">#ffffff</color>
+    <color name="colorBlack">#00000000</color>
 </resources>

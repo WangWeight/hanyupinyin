@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.ListIterator;
 
 import dji.sdk.FlightController.DJIFlightControllerDataType;
-import dji.sdk.util.DJILocationCoordinate2D;
 
 /**
  * Created by Administrator on 2016/7/1.

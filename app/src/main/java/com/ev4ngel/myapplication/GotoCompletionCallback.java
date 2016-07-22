@@ -125,6 +125,6 @@ public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCal
     public void onResult(DJIMedia djiMedia) {
         DJIGimbal.DJIGimbalAttitude att=mGimbal.getAttitudeInDegrees();
         pwPoint.addPhoto(new PhotoInfo(djiMedia.getFileName(),att.yaw,att.pitch));
-        mFile.write();
+        //mFile.write();
     }
 }

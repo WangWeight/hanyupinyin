@@ -29,97 +29,54 @@ import java.util.PriorityQueue;
  ]*
  */
 
-public class PhotoWayPointFile {
-    private String fileName="";
-    public FileOutputStream fos=null;
-    public ArrayList<PhotoWayPoint> WayPoints;
-
-    public PhotoWayPointFile(String wpfName)
+public class PhotoWayPointFile extends JsonFile {
+    private ArrayList<PhotoWayPoint> WayPoints;
+    private JSONArray jWaypoints;
+    private String file_name;
+    private String path_name;
+    public static PhotoWayPointFile load(String path_name)
     {
-
-        fileName=PhotoWayPointFile.get_way_points_dir()+wpfName;
+        return new PhotoWayPointFile(path_name);
+    }
+    private PhotoWayPointFile(String wpfName)
+    {
+        super(wpfName);
+        if(!wpfName.endsWith("/"))
+            mFilename+="/";
+        path_name=mFilename;
         WayPoints=new ArrayList<PhotoWayPoint>();
-        read();
-
     }
-    public static String get_way_points_dir()
-    {
-
-        String full_wpf_dir= Common.app_dir+Common.wpf_dir;
-        File ffull=new File(full_wpf_dir);
-        if(!ffull.exists())
-        {
-            try{
-                ffull.mkdirs();
-            }catch (SecurityException se)
-            {
-
-            }
-        }
-        return full_wpf_dir;
-    }
-    public void write(String fn)
-    {
-         File ff=new File(fn);
-        try {
-            fos = new FileOutputStream(ff);
-            JSONArray jwps = new JSONArray();
-            for (int i = 0; i < WayPoints.size(); i++) {
-                jwps.put(WayPoints.get(i).toJson());
-            }
-            fos.write(jwps.toString().getBytes());
-            fos.close();
-        }catch(Exception e)
-        {
-
-        }
-    }
-    public void write()
-    {
-        write(fileName);
-    }
-    public void read()
-    {
-        File f=new File(fileName);
-        if(f.exists()) {
+    public void read(String fname) {//Read one of many files
+        mFilename+=fname;
+        file_name=fname;
+        open(true);
+        if (mContent.length()!=0){//Read the content if the file is not empty
             try {
-                FileInputStream fis=new FileInputStream(f);
-                byte[] b=new byte[fis.available()];
-                fis.read(b);
-                fis.close();
-                //Toast.makeText(mContext,new String(b), Toast.LENGTH_LONG).show();
-                try {
-                    JSONArray jWaypoints = new JSONArray(new JSONTokener(new String(b)));
-                    for(int i=0;i<jWaypoints.length();i++)
-                    {
-                        PhotoWayPoint wp=new PhotoWayPoint((JSONObject)jWaypoints.get(i));
-                        WayPoints.add(wp);
-                    }
-                }
-                catch(JSONException e)
+                jWaypoints = new JSONArray(new JSONTokener(mContent));
+                for(int i=0;i<jWaypoints.length();i++)
                 {
-
+                    PhotoWayPoint wp=new PhotoWayPoint((JSONObject)jWaypoints.get(i));
+                    WayPoints.add(wp);
                 }
             }
-            catch(IOException e)
+            catch(JSONException e)
             {
-
             }
-        }
-        else
+        }else
         {
-            try {
-                fos = new FileOutputStream(f);
-            }catch(IOException e)
-            {
-
-            }
+            jWaypoints = new JSONArray();
         }
     }
 
     public void addWayPoint(PhotoWayPoint wp)
     {
         WayPoints.add(wp);
-        write(fileName);
+        jWaypoints.put(wp.toJson());
+        mContent=jWaypoints.toString();
+        save();
+    }
+    public PhotoWayPoint getWayPoint(int index)
+    {
+        return WayPoints.get(index);
     }
 }

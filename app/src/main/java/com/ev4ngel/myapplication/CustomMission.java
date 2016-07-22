@@ -69,7 +69,7 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
         {
             space=1;
         }
-        CalBox cb=new CalBox();
+        CalcBox cb=new CalcBox();
         switch(boundary.size()) {
             case 2:{
                 wayPoints = cb.calcOneLinePlanPointList(boundary.get(0),boundary.get(1),space);

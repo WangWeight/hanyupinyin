@@ -66,7 +66,7 @@ public class Map implements OnMapClickListener, AMapLocationListener ,LocationSo
 		mPoints=new ArrayList<LatLng>();
 		MarkerOptions planeOpt=new MarkerOptions();
 		planeOpt.title("Plane");
-		planeOpt.icon(new BitmapDescriptor(AutoflyApplication.getContext().getResources(),R.drawable.ic_media_play));
+		//planeOpt.icon(new BitmapDescriptor(AutoflyApplication.getContext().getResources(),R.drawable.ic_media_play));
 		mPlane=new Marker(planeOpt);
 
 	}
