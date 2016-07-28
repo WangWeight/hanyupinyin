@@ -90,12 +90,18 @@ public class Project {
         if(isExistProject(name))
         {
             try{
-                mPsc.delect(name);//Delete from config file
-                mPsc.write();
-                close_airway();
-                mPc.close();
                 File f=new File(root_dirname+unfix_name(name)+"."+System.currentTimeMillis()+"/");
-                return (new File(root_dirname+name).renameTo(f))?0:1;
+                boolean rlt=new File(root_dirname+name).renameTo(f);
+                if(rlt)
+                {
+                    mPsc.delect(name);//Delete from config file
+                    mPsc.write();
+                    close_airway();
+                    mPc.close();
+                    return 0;
+                }else{
+                    return 1;
+                }
             }catch (Exception e)
             {
                 Log.i("e","Remove Prj fail");
@@ -119,10 +125,6 @@ public class Project {
                 new File(root_dirname + name+Project.photopoints_dirname).mkdir();
                 mPsc.add_prj(name);
                 mPsc.write();
-
-
-
-
             }catch (Error e)
             {
                 Log.i("e","Make project dir fail"+name);
@@ -174,7 +176,7 @@ public class Project {
         */
         current_project_name=name;
         mPwf=PhotoWayPointFile.load(name);
-        mWpf=WayPointFile.load(name);
+        mWpf = WayPointFile.load(name);
         //ProjectConfig.load(name);
         mPc=mPsc.open_prj(name);
         mPsc.setRecent_project(name);

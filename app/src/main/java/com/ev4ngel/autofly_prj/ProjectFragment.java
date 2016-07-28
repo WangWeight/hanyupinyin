@@ -54,7 +54,6 @@ public class ProjectFragment extends Fragment implements
         Prj_add.setOnClickListener(this);
         mLv=(ListView)v.findViewById(R.id.prj_list_prj);
         mPrj=new Project();
-        //mPrj.load_recent_project();
         _aa=new ArrayAdapter<String>(getActivity().getApplicationContext(),R.layout.prj_ilistview_layout,mPrj.getProjects());//android.R.layout.simple_list_item_1,mPrj.getProjects());
         mLv.setAdapter(_aa);
         mLv.setOnItemClickListener(this);
@@ -122,6 +121,7 @@ public class ProjectFragment extends Fragment implements
 
                         }else {
                             mPrj.new_project(text);
+                            _aa.notifyDataSetChanged();
                             Log.i(E, "Prj load");
                         }
                     }

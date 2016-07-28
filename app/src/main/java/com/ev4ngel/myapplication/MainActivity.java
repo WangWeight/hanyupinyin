@@ -329,7 +329,6 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        ((SeekBar) findViewById(R.id.width_sb)).setOnSeekBarChangeListener(this);
         log = new T(getApplicationContext());
 
     }
