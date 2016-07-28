@@ -76,7 +76,14 @@ public class WayPointFile extends JsonFile{
     }
     public WayPointFile add_waypoint(double lat,double lng,int status)
     {
-        add_waypoint(new WayPoint(lat,lng,status));
+        add_waypoint(new WayPoint(lat, lng, status));
         return this;
     }
+    public WayPointFile set_waypoints(ArrayList<WayPoint> a)
+    {
+        WayPoints=a;
+        write();
+        return this;
+    }
+
 }

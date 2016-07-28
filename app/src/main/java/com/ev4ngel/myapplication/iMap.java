@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +32,7 @@ import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.Polyline;
 import com.amap.api.maps2d.model.PolylineOptions;
+import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
 import com.ev4ngel.autofly_prj.WayPoint;
 
 import java.util.ArrayList;
@@ -52,6 +54,7 @@ public class iMap extends Fragment implements
     AMap mMap = null;
     Marker mPlane = null;
     WayPointArea mArea = null;
+    private OnSaveWayPointListener mSvListener=null;
     public ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> mWayPoints_latlng = null;
     ArrayList<WayPoint> mWayPoints = null;
     ArrayList<String> mWayPoints_string = null;
@@ -87,10 +90,7 @@ public class iMap extends Fragment implements
             fab_clear.setVisibility(View.GONE);
         }
     }
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+
 
     public void moveTo(LatLng pos)
     {
@@ -113,14 +113,14 @@ public class iMap extends Fragment implements
                 if (mWayPoints_string.size() > 0) {
                     mMap.clear();
                 }
-                mWayPoints_latlng = cb.calcNearestPlanPointList(new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(0).latitude,mArea.area_points.get(1).longitude),
-                        new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(1).latitude,mArea.area_points.get(1).longitude),
-                        new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(2).latitude,mArea.area_points.get(2).longitude),
-                        selectWidthFrg.getDirectionWidth(), new DJIFlightControllerDataType.DJILocationCoordinate2D(startPoint.latitude,startPoint.longitude));
+                mWayPoints_latlng = cb.calcNearestPlanPointList(new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(0).latitude, mArea.area_points.get(0).longitude),
+                        new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(1).latitude, mArea.area_points.get(1).longitude),
+                        new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(2).latitude, mArea.area_points.get(2).longitude),
+                        selectWidthFrg.getDirectionWidth(), new DJIFlightControllerDataType.DJILocationCoordinate2D(startPoint.latitude, startPoint.longitude));
                 for (DJIFlightControllerDataType.DJILocationCoordinate2D loc : mWayPoints_latlng) {
                     Marker m = mMap.addMarker(init_waypoint());
                     m.setPosition(iMap.fromGPSToMar(new LatLng(loc.getLatitude(), loc.getLongitude())));
-                    mWayPoints.add(new WayPoint(m.getPosition().latitude,m.getPosition().longitude, WayPointStatus.Wait));
+                    mWayPoints.add(new WayPoint(m.getPosition().latitude, m.getPosition().longitude, WayPointStatus.Wait));
                     mWayPoints_string.add(m.getId());
                 }
                 if (mLine == null) {
@@ -217,7 +217,7 @@ public class iMap extends Fragment implements
                     save_line_ad = new AlertDialog.Builder(getActivity())
                             .setTitle("输入航线名称")
                             .setView(vv)
-                            .setPositiveButton("保存", null)
+                            .setPositiveButton("保存", iMap.this)
                             .setNegativeButton("取消", null).create();
                     save_line_ad.show();
                 }
@@ -451,9 +451,15 @@ public class iMap extends Fragment implements
     public void onClick(DialogInterface dialog, int which) {
         if (dialog.toString().equals(save_line_ad.toString())) {
             if(which==DialogInterface.BUTTON_POSITIVE){
-                Toast.makeText(AutoflyApplication.getContext(),save_name_et.getText().toString(),Toast.LENGTH_SHORT).show();
+                String text=save_name_et.getText().toString();
+                if(!text.isEmpty()) {
+                    if (mSvListener != null)
+                        mSvListener.onSaveWayPoint(text,mWayPoints);
+                    Log.i("E","+"+mWayPoints.toString());
+                }
+                //Toast.makeText(AutoflyApplication.getContext(),save_name_et.getText().toString(),Toast.LENGTH_SHORT).show();
             }
-        } else {
+        } else if(dialog.toString().equals("")){
             if (which == DialogInterface.BUTTON_POSITIVE)
                 _draw_line();
         }
@@ -466,6 +472,10 @@ public class iMap extends Fragment implements
             r.add(iMap.fromGPSToMar(new LatLng(ss.getLatitude(),ss.getLongitude())));
         }
         return r;
+    }
+    public void setOnSaveWayPointListener(OnSaveWayPointListener listener)
+    {
+        mSvListener=listener;
     }
 
 }

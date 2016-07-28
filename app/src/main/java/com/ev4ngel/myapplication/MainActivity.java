@@ -26,8 +26,10 @@ import android.widget.Toast;
 import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.model.Polygon;
 import com.ev4ngel.autofly_prj.OnLoadProjectListener;
+import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
 import com.ev4ngel.autofly_prj.Project;
 import com.ev4ngel.autofly_prj.ProjectFragment;
+import com.ev4ngel.autofly_prj.WayPoint;
 
 import org.w3c.dom.Text;
 
@@ -65,7 +67,8 @@ public class MainActivity extends AppCompatActivity
         View.OnClickListener,
         View.OnLongClickListener,
         SeekBar.OnSeekBarChangeListener,
-        OnLoadProjectListener{
+        OnLoadProjectListener,
+        OnSaveWayPointListener{
 
 
     private DJIGimbal gimbal = null;
@@ -155,6 +158,7 @@ public class MainActivity extends AppCompatActivity
 
     public void registerUiListener() {
         mProjectFrg.getProjectInstance().setOnProjectLoad(this);
+        mMapFrg.setOnSaveWayPointListener(this);
         //((Button) findViewById(R.id.start_bt)).setOnClickListener(this);
         //((Button) findViewById(R.id.pause_bt)).setOnClickListener(this);
         //((Button) findViewById(R.id.resume_bt)).setOnClickListener(this);
@@ -317,7 +321,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initParams();
-        mMapFrg.onCreate(savedInstanceState);
+        //mMapFrg.onCreate(savedInstanceState);
         //init in initUi
         _registerReceiver();
         batterCallback = new BatteryStateUpdateCallback(batteryVolView, batteryRemainView, batteryTempView);
@@ -338,7 +342,6 @@ public class MainActivity extends AppCompatActivity
         super.onStart();
         registerUiListener();
     }
-
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -616,8 +619,23 @@ public class MainActivity extends AppCompatActivity
     }
     public void onLoadProject()
     {
-        ((TextView)findViewById(R.id.nav_prj_name)).setText(mProjectFrg.getProjectInstance().current_project_name);
-        ((TextView)findViewById(R.id.nav_prj_detail)).setText(mProjectFrg.getProjectInstance().current_project_name);
+        TextView tv1=((TextView) findViewById(R.id.nav_prj_name));
+        if(tv1!=null)
+            tv1.setText("当前项目" + mProjectFrg.getProjectInstance().current_project_name);
+        TextView tv2=((TextView)findViewById(R.id.nav_prj_detail));
+        if(tv2!=null)
+            tv2.setText(mProjectFrg.getProjectInstance().current_project_name);
 
+    }
+
+    @Override
+    public void onSaveWayPoint(String fname,ArrayList<WayPoint> wps) {//当点击保存航线按钮确认后会调用
+        if(wps!=null)
+        {
+            if(mProjectFrg!=null)
+            {
+                mProjectFrg.getProjectInstance().new_airway(fname).get_wp_file().set_waypoints(wps);
+            }
+        }
     }
 }

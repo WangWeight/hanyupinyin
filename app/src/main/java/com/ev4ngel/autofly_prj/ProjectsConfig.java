@@ -56,7 +56,7 @@ public class ProjectsConfig extends JsonFile{
         this.save();
     }
     public ProjectConfig open_prj(String name) {
-        if (!name.equals(project_names.get(project_names.size() - 1))){
+        if (project_names.size()>0&&!name.equals(project_names.get(project_names.size() - 1))){
             delect(name);
             return add_prj(name);
         }

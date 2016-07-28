@@ -110,7 +110,7 @@ public class Project {
         }
         return  0;
     }
-    public int new_project(String name)
+    public int new_project(String name,boolean load_after_new)
     {
         //name.("[\w]*")
         name=fix_name(name);
@@ -131,13 +131,14 @@ public class Project {
                 return 2;
             }
         }
-        load_project(name);
-        mWpf.read("new");
+        if(load_after_new)
+            load_project(name);
+   /*     mWpf.read("new");
         for(int i=0;i<50;i++) {
         mWpf.add_waypoint(i*i,i*i*i,i);
         }
-    /*
-    Test for photoFile*/
+
+    Test for photoFile
     mPwf.read("new");
     for(int i=0;i<50;i++) {
         PhotoWayPoint pwp=new PhotoWayPoint();
@@ -150,7 +151,7 @@ public class Project {
         for(int j=0;j<4;j++)
             pwp.addPhoto("#"+i+"-"+j,j*90,i);
         mPwf.addPhotoWayPoint(pwp);
-    }
+    }*/
         return 0;
     }
     public static String fix_name(String name)
@@ -168,12 +169,11 @@ public class Project {
     public int load_project(String name)//the name must exists
     {
         name=fix_name(name);
-        /*
+
         if(!isExistProject(name))
         {
-            new_project(name);
+            new_project(name,false);
         }
-        */
         current_project_name=name;
         mPwf=PhotoWayPointFile.load(name);
         mWpf = WayPointFile.load(name);
@@ -185,18 +185,12 @@ public class Project {
             mOnLoader.onLoadProject();
         return 0;
     }
-    public int new_airway(String name)
+    public Project new_airway(String name)
     {
-        if(mPc.isExistsAirway(name))
-        {
-            return 1;
-        }else {
-            current_airway_name=name;
-            mWpf.read(name);
-            mPwf.read(name);
-            //mAf.read(name);
-        }
-        return 0;
+        current_airway_name=name;
+        mWpf.read(name);
+        mPwf.read(name);
+        return this;
     }
     public void close_airway()
     {

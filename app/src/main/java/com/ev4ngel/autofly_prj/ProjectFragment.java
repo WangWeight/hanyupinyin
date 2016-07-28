@@ -79,6 +79,13 @@ public class ProjectFragment extends Fragment implements
         return v;
 
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mPrj.load_recent_project();
+    }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -87,7 +94,6 @@ public class ProjectFragment extends Fragment implements
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-
     }
 
     @Override
@@ -120,7 +126,7 @@ public class ProjectFragment extends Fragment implements
                         {
 
                         }else {
-                            mPrj.new_project(text);
+                            mPrj.new_project(text,true);
                             _aa.notifyDataSetChanged();
                             Log.i(E, "Prj load");
                         }
@@ -140,16 +146,13 @@ public class ProjectFragment extends Fragment implements
                                 }break;
                                 case 1:{
                                     Toast.makeText(getActivity().getApplicationContext(),"删除项目失败", Toast.LENGTH_LONG).show();
-
                                 }break;
                                 case 2:{
                                         Toast.makeText(getActivity().getApplicationContext(), "该项目不允许删除", Toast.LENGTH_LONG).show();
                                 }
                             }
 
-
                         }
-
                     }
                 }
             }
@@ -168,8 +171,7 @@ public class ProjectFragment extends Fragment implements
         mItem_index=position;
         open_prj_ad.show();
     }
-    public Project getProjectInstance()
-    {
+    public Project getProjectInstance() {
         return mPrj;
     }
 }
