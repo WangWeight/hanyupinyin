@@ -2,6 +2,9 @@ package com.ev4ngel.myapplication;
 
 import android.util.Log;
 
+import com.ev4ngel.autofly_prj.PhotoInfo;
+import com.ev4ngel.autofly_prj.PhotoWayPoint;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;

@@ -6,6 +6,9 @@
         android:id="@+id/prj_list_prj"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:focusable="false"
+        android:cacheColorHint="#000000"
+        android:alpha="1"
         >
 
     </ListView>

@@ -31,6 +31,7 @@ import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.Polyline;
 import com.amap.api.maps2d.model.PolylineOptions;
+import com.ev4ngel.autofly_prj.WayPoint;
 
 import java.util.ArrayList;
 
@@ -112,14 +113,14 @@ public class iMap extends Fragment implements
                 if (mWayPoints_string.size() > 0) {
                     mMap.clear();
                 }
-                mWayPoints_latlng = cb.calcNearestPlanPointList(new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(0)),
-                        new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(1)),
-                        new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(2)),
-                        selectWidthFrg.getDirectionWidth(), new DJIFlightControllerDataType.DJILocationCoordinate2D(startPoint));
+                mWayPoints_latlng = cb.calcNearestPlanPointList(new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(0).latitude,mArea.area_points.get(1).longitude),
+                        new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(1).latitude,mArea.area_points.get(1).longitude),
+                        new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(2).latitude,mArea.area_points.get(2).longitude),
+                        selectWidthFrg.getDirectionWidth(), new DJIFlightControllerDataType.DJILocationCoordinate2D(startPoint.latitude,startPoint.longitude));
                 for (DJIFlightControllerDataType.DJILocationCoordinate2D loc : mWayPoints_latlng) {
                     Marker m = mMap.addMarker(init_waypoint());
                     m.setPosition(iMap.fromGPSToMar(new LatLng(loc.getLatitude(), loc.getLongitude())));
-                    mWayPoints.add(new WayPoint(m, WayPointStatus.Wait));
+                    mWayPoints.add(new WayPoint(m.getPosition().latitude,m.getPosition().longitude, WayPointStatus.Wait));
                     mWayPoints_string.add(m.getId());
                 }
                 if (mLine == null) {
@@ -146,10 +147,14 @@ public class iMap extends Fragment implements
             _draw_line();
         }
     }
-
+    public Marker makeMarkerFromWaypoint(WayPoint wp){
+        MarkerOptions mo=new MarkerOptions();
+        mo.position(new LatLng(wp.lat,wp.lng));
+        return mMap.addMarker(mo);
+    }
     public Marker findMarkerById(String id)
     {
-        return findWayPointById(id).mkr;
+        return makeMarkerFromWaypoint(findWayPointById(id));
     }
     public WayPoint findWayPointById(String id)
     {
@@ -157,7 +162,7 @@ public class iMap extends Fragment implements
     }
     public void updateWayPointByIndex(int id,float status)
     {
-        mWayPoints.get(id).mkr.setIcon(BitmapDescriptorFactory.defaultMarker(status));;
+        makeMarkerFromWaypoint(mWayPoints.get(id)).setIcon(BitmapDescriptorFactory.defaultMarker(status));;
     }
     private MarkerOptions init_plane()
     {
@@ -270,18 +275,16 @@ public class iMap extends Fragment implements
             if (mMapOptStatus == MapOperationStatus.Design) {
                 if (mArea.getCount() > 3) {
                     mArea.clear();
-                    for (WayPoint w : mWayPoints) {
-                        w.clear();
-                    }
+                    mMap.clear();
                     mWayPoints = new ArrayList<>();
                     mWayPoints_latlng = new ArrayList<>();
                     mWayPoints_string = new ArrayList<>();
                 }
                 mArea.add(new GPS().mar2GPS(latLng));
                 if (mArea.getCount() == 3) {
-                    DJIFlightControllerDataType.DJILocationCoordinate2D _4th = new CalcBox().calc4thPoint(new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(0)),
-                            new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(1)),
-                            new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(2)));
+                    DJIFlightControllerDataType.DJILocationCoordinate2D _4th = new CalcBox().calc4thPoint(new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(0).latitude,mArea.area_points.get(0).longitude),
+                            new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(1).latitude,mArea.area_points.get(1).longitude),
+                            new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(2).latitude,mArea.area_points.get(2).longitude));
                     mArea.add(new LatLng(_4th.getLatitude(), _4th.getLongitude()));
                 }
                 mArea.updateArea(mMap);

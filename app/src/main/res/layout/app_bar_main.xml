@@ -57,35 +57,15 @@
         </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>
-    <include
-        android:id="@+id/cam_or_map"
-        layout="@layout/content_main"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"/>
-    <include
-        android:id="@+id/airline"
-        layout="@layout/airline_main"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"/>
-    <include
-        android:id="@+id/setting"
-        layout="@layout/setting_main"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"/>
-    <include
-        android:id="@+id/project"
-        layout="@layout/project_main"
+
+    <FrameLayout
+        android:id="@+id/prj_frg"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         />
-    <include
-        android:id="@+id/map"
-        layout="@layout/map_main"
+    <FrameLayout
+        android:id="@+id/map_frg"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"
-        />
+    />
 </android.support.design.widget.CoordinatorLayout>

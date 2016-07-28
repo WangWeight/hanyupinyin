@@ -3,6 +3,11 @@ package com.ev4ngel.myapplication;
 import android.content.Context;
 import android.support.design.widget.Snackbar;
 import android.widget.Toast;
+
+import com.ev4ngel.autofly_prj.PhotoInfo;
+import com.ev4ngel.autofly_prj.PhotoWayPoint;
+import com.ev4ngel.autofly_prj.PhotoWayPointFile;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;

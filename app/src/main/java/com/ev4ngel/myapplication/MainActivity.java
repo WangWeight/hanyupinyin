@@ -25,6 +25,9 @@ import android.widget.Toast;
 
 import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.model.Polygon;
+import com.ev4ngel.autofly_prj.OnLoadProjectListener;
+import com.ev4ngel.autofly_prj.Project;
+import com.ev4ngel.autofly_prj.ProjectFragment;
 
 import org.w3c.dom.Text;
 
@@ -61,7 +64,8 @@ public class MainActivity extends AppCompatActivity
         DJIFlightControllerDelegate.FlightControllerUpdateSystemStateCallback,
         View.OnClickListener,
         View.OnLongClickListener,
-        SeekBar.OnSeekBarChangeListener {
+        SeekBar.OnSeekBarChangeListener,
+        OnLoadProjectListener{
 
 
     private DJIGimbal gimbal = null;
@@ -70,6 +74,10 @@ public class MainActivity extends AppCompatActivity
     private DJIFlightController flightController = null;
     private DJIMissionManager mMissonManager = null;
     private DJICustomMission mMission = null;
+
+    ///tags setting
+    String prj_frg_tag="prj_frg";
+    String map_frg_tag="map_frg";
 
     Project mProject=null;
     //views
@@ -80,6 +88,11 @@ public class MainActivity extends AppCompatActivity
     private View settingPage;//设置页面
     private View camOrMapPage;//相机/地图页面
     private View mapPage;
+
+    private ProjectFragment mProjectFrg;
+    private iMap mMapFrg;
+    private FragmentShower mFrgShow;
+
     private TextView gpsCountView;//gps数量显示
     private TextView batteryRemainView;//电池电量显示
     private TextView batteryVolView;//
@@ -93,10 +106,8 @@ public class MainActivity extends AppCompatActivity
     private TextView posHeight;//
     private TextView attitudeView;//
     private TextView batteryTempView;
-    //private FloatingActionButton startFab;
-    //private FloatingActionButton pauseFab;
-    //private FloatingActionButton resumeFab;
-    private PhotoWayPointFile mPWPFile;
+
+
     private BatteryStateUpdateCallback batterCallback;
     private int line_width = 40;
 
@@ -143,14 +154,15 @@ public class MainActivity extends AppCompatActivity
 
 
     public void registerUiListener() {
-        ((Button) findViewById(R.id.start_bt)).setOnClickListener(this);
-        ((Button) findViewById(R.id.pause_bt)).setOnClickListener(this);
-        ((Button) findViewById(R.id.resume_bt)).setOnClickListener(this);
-        ((Button) findViewById(R.id.stop_bt)).setOnClickListener(this);
-        ((Button) findViewById(R.id.prepare_bt)).setOnClickListener(this);
-        ((Button) findViewById(R.id.show_pl_bt)).setOnClickListener(this);
-        ((Button) findViewById(R.id.clear_pl_bt)).setOnClickListener(this);
-        ((Button) findViewById(R.id.gen_pl_bt)).setOnClickListener(this);
+        mProjectFrg.getProjectInstance().setOnProjectLoad(this);
+        //((Button) findViewById(R.id.start_bt)).setOnClickListener(this);
+        //((Button) findViewById(R.id.pause_bt)).setOnClickListener(this);
+        //((Button) findViewById(R.id.resume_bt)).setOnClickListener(this);
+        //((Button) findViewById(R.id.stop_bt)).setOnClickListener(this);
+        //((Button) findViewById(R.id.prepare_bt)).setOnClickListener(this);
+        //((Button) findViewById(R.id.show_pl_bt)).setOnClickListener(this);
+        //((Button) findViewById(R.id.clear_pl_bt)).setOnClickListener(this);
+        //((Button) findViewById(R.id.gen_pl_bt)).setOnClickListener(this);
 
 
         //startFab.setOnClickListener(this);
@@ -265,11 +277,6 @@ public class MainActivity extends AppCompatActivity
 
     private void initUi() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        projectPage = findViewById(R.id.project);
-        airlinePage = findViewById(R.id.airline);//).setVisibility(View.GONE);
-        camOrMapPage = findViewById(R.id.cam_or_map);//).setVisibility(View.GONE);
-        settingPage = findViewById(R.id.setting);//).setVisibility(View.GONE);
-        mapPage=findViewById(R.id.map);
         gpsCountView = (TextView) findViewById(R.id.gps_count);
         batteryRemainView = (TextView) findViewById(R.id.battery_view);
         batteryVolView = (TextView) findViewById(R.id.battery_vol_view);
@@ -281,59 +288,22 @@ public class MainActivity extends AppCompatActivity
         isConnectedView = (TextView) findViewById(R.id.is_connected);
         line_space_view = (TextView) findViewById(R.id.line_space);
         //gimbalFab.setBackgroundColor(getResources().getColor(R.color.fad_invalid,getTheme()));
-        ((SeekBar) findViewById(R.id.fly_speed_sb)).setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                ((TextView) findViewById(R.id.fly_speed_tv)).setText(progress + "m/s");
-                fly_speed = progress;
-            }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-        ((SeekBar) findViewById(R.id.rotate_speed_sb)).setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                ((TextView) findViewById(R.id.rotate_speed_tv)).setText(progress + "d/s");
-                rotate_speed = progress;
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-        mMap=new Map((MapView)findViewById(R.id.map_view));
+        //mMap=new Map((MapView)findViewById(R.id.map_view));
 
     }
 
     private void initParams() {
         initUi();
-        setPageInvisibility();//设置所有page不可见
-        projectPage.setVisibility(View.VISIBLE);//将project设置可见
-        registerUiListener();
+        mProjectFrg=new ProjectFragment();
+        mMapFrg=new iMap();
+        mFrgShow=new FragmentShower(getFragmentManager());
+        mFrgShow.add(R.id.prj_frg,mProjectFrg,prj_frg_tag)
+                .add(R.id.map_frg,mMapFrg,map_frg_tag)
+                .show(mProjectFrg);
+
         if(mCM==null)
             mCM = new CustomMission(log);
-    }
-
-    private void setPageInvisibility() {
-        projectPage.setVisibility(View.GONE);
-        airlinePage.setVisibility(View.GONE);
-        camOrMapPage.setVisibility(View.GONE);
-        settingPage.setVisibility(View.GONE);
-        mapPage.setVisibility(View.GONE);
     }
 
     private void _registerReceiver() {
@@ -347,9 +317,8 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initParams();
-
+        mMapFrg.onCreate(savedInstanceState);
         //init in initUi
-        mMap.onCreate(savedInstanceState);
         _registerReceiver();
         batterCallback = new BatteryStateUpdateCallback(batteryVolView, batteryRemainView, batteryTempView);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -362,10 +331,13 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         ((SeekBar) findViewById(R.id.width_sb)).setOnSeekBarChangeListener(this);
         log = new T(getApplicationContext());
-        boundary = new ArrayList<>();
-        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.803111, 123.427709));
-        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.803104, 123.428371));
-        boundary.add(new DJIFlightControllerDataType.DJILocationCoordinate2D(41.802767, 123.428412));
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        registerUiListener();
     }
 
     @Override
@@ -407,22 +379,15 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_project) {
             // Handle the camera action
-            setPageInvisibility();
-            projectPage.setVisibility(View.VISIBLE);
-
+            mFrgShow.show(mProjectFrg);
         } else if (id == R.id.nav_airline) {
-            setPageInvisibility();
-            airlinePage.setVisibility(View.VISIBLE);
+            mMapFrg.setMode(MapMode.Design);
+            mFrgShow.show(mMapFrg);
         } else if (id == R.id.nav_cam_or_map) {
-            setPageInvisibility();
-            camOrMapPage.setVisibility(View.VISIBLE);
+            mMapFrg.setMode(MapMode.Reference);
+            mFrgShow.show(mMapFrg);
         } else if (id == R.id.nav_settings) {
-            setPageInvisibility();
             settingPage.setVisibility(View.VISIBLE);
-        }
-            else if (id == R.id.nav_map) {
-                setPageInvisibility();
-                mapPage.setVisibility(View.VISIBLE);
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
@@ -439,27 +404,30 @@ public class MainActivity extends AppCompatActivity
         ///getApplicationContext().unregisterReceiver(mReceiver);
         super.onDestroy();
         unregisterReceiver(mReceiver);
-        mMap.onDestroy();
+        //mMap.onDestroy();
+        mMapFrg.onDestroy();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mMap.onPause();
+        //mMap.onPause();
+        mMapFrg.onPause();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
         super.onSaveInstanceState(outState, outPersistentState);
-        mMap.onSaveInstanceState(outState);
+        //mMap.onSaveInstanceState(outState);
+        mMapFrg.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mMap.onResume();
+        //mMap.onResume();
+        mMapFrg.onResume();
     }
-
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         String msg = "";
@@ -634,7 +602,7 @@ public class MainActivity extends AppCompatActivity
 
             case R.id.show_pl_bt:{
                 if(mCM.wayPoints.size()>0) {
-                    mMap.drawWaypoints(mCM.wayPoints,getApplicationContext());
+                    //mMap.drawWaypoints(mCM.wayPoints,getApplicationContext());
                 }
                 else {
                     log.i("No waypoints");
@@ -642,13 +610,15 @@ public class MainActivity extends AppCompatActivity
             }
             break;
             case R.id.clear_pl_bt:{
-                mMap.clearMap();
+                //mMap.clearMap();
             }break;
 
         }
     }
-    public void onLoadProject(Project p)
+    public void onLoadProject()
     {
-        mProject=p;
+        ((TextView)findViewById(R.id.nav_prj_name)).setText(mProjectFrg.getProjectInstance().current_project_name);
+        ((TextView)findViewById(R.id.nav_prj_detail)).setText(mProjectFrg.getProjectInstance().current_project_name);
+
     }
 }
