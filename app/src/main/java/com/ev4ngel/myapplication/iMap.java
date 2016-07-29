@@ -33,6 +33,7 @@ import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.Polyline;
 import com.amap.api.maps2d.model.PolylineOptions;
 import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
+import com.ev4ngel.autofly_prj.WPStatus;
 import com.ev4ngel.autofly_prj.WayPoint;
 
 import java.util.ArrayList;
@@ -55,9 +56,10 @@ public class iMap extends Fragment implements
     Marker mPlane = null;
     WayPointArea mArea = null;
     private OnSaveWayPointListener mSvListener=null;
-    public ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> mWayPoints_latlng = null;
+    public ArrayList<LatLng> mWayPoints_latlng = null;
     ArrayList<WayPoint> mWayPoints = null;
     ArrayList<String> mWayPoints_string = null;
+    ArrayList<Marker> mWayPoints_marker=null;
     Polyline mLine = null;
     MTBSelectWidthFragment selectWidthFrg = null;
     MTBDesignFragment designFrg=null;
@@ -102,25 +104,38 @@ public class iMap extends Fragment implements
         mPlane.setPosition(iMap.fromGPSToMar(pos));
         mPlane.setRotateAngle(angle);
     }
-    private  void _draw_line()
+
+    public void cal_waypoints()
+    {
+        CalcBox cb = new CalcBox();
+        if (startPoint == null)
+            startPoint = mArea.area_points.get(0);
+        if (mWayPoints_string.size() > 0) {
+            mMap.clear();
+        }
+        mWayPoints_latlng = cb.calcNearestPlanPointList(mArea.area_points.get(0),
+                mArea.area_points.get(1),
+                mArea.area_points.get(2),
+                selectWidthFrg.getDirectionWidth(),
+                startPoint,
+                selectWidthFrg.getSideWidth());
+        for(LatLng loc:mWayPoints_latlng)
+        {
+            if(mWayPoints==null ||mWayPoints.size()>0)
+                mWayPoints=new ArrayList<>();
+            mWayPoints.add(new WayPoint(loc,WayPointStatus.Wait));
+        }
+    }
+    private  void _draw_line(final boolean isPointsReady)
     {
         new Handler(AutoflyApplication.getContext().getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                CalcBox cb = new CalcBox();
-                if (startPoint == null)
-                    startPoint = mArea.area_points.get(0);
-                if (mWayPoints_string.size() > 0) {
-                    mMap.clear();
-                }
-                mWayPoints_latlng = cb.calcNearestPlanPointList(new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(0).latitude, mArea.area_points.get(0).longitude),
-                        new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(1).latitude, mArea.area_points.get(1).longitude),
-                        new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(2).latitude, mArea.area_points.get(2).longitude),
-                        selectWidthFrg.getDirectionWidth(), new DJIFlightControllerDataType.DJILocationCoordinate2D(startPoint.latitude, startPoint.longitude));
-                for (DJIFlightControllerDataType.DJILocationCoordinate2D loc : mWayPoints_latlng) {
-                    Marker m = mMap.addMarker(init_waypoint());
-                    m.setPosition(iMap.fromGPSToMar(new LatLng(loc.getLatitude(), loc.getLongitude())));
-                    mWayPoints.add(new WayPoint(m.getPosition().latitude, m.getPosition().longitude, WayPointStatus.Wait));
+                if(!isPointsReady)
+                    cal_waypoints();
+                for (WayPoint loc : mWayPoints) {
+                    Marker m = mMap.addMarker(init_waypoint_status(loc.status));
+                    m.setPosition(iMap.fromGPSToMar(loc.toLatLng()));
                     mWayPoints_string.add(m.getId());
                 }
                 if (mLine == null) {
@@ -128,15 +143,19 @@ public class iMap extends Fragment implements
                     mLine.setColor(Color.argb(100, 0, 0, 255));
                     mLine.setWidth(1);
                 }
-                mLine.setPoints(convertFrom2D(mWayPoints_latlng));//I should convert DJICoordinate2D to LatLng type,boring
+                mLine.setPoints(mWayPoints_latlng);//I should convert DJICoordinate2D to LatLng type,boring
             }
         });
     }
-    public void drawline()
+    public void drawline(boolean isPointsReady)//若isPointsReady,不会调用计算的方法，否则会根据mArea的点重新计算
     {
-        int maybe_number=(int)(AMapUtils.calculateLineDistance(mArea.area_points.get(0),mArea.area_points.get(1))*AMapUtils.calculateLineDistance(mArea.area_points.get(2),mArea.area_points.get(1))/selectWidthFrg.getDirectionWidth()/selectWidthFrg.getSideWidth());
+
+        int maybe_number=mWayPoints.size();
+        if(!isPointsReady)
+            maybe_number=(int)(AMapUtils.calculateLineDistance(mArea.area_points.get(0),mArea.area_points.get(1))*AMapUtils.calculateLineDistance(mArea.area_points.get(2),mArea.area_points.get(1))/selectWidthFrg.getDirectionWidth()/selectWidthFrg.getSideWidth());
         if(maybe_number>Common.MAX_NUMBER_OF_WAYPOINTS)
         {
+
             new AlertDialog.Builder(getActivity())
                     .setTitle("是不是有点多?")
                     .setMessage("大概能有"+maybe_number+"个点(比设置的["+Common.MAX_NUMBER_OF_WAYPOINTS+"]多不少)\n这约莫会占用很长时间(或者当掉你的app)")
@@ -144,7 +163,7 @@ public class iMap extends Fragment implements
                     .setNegativeButton("算了吧", null)
                     .show();
         }else {
-            _draw_line();
+            _draw_line(isPointsReady);
         }
     }
     public Marker makeMarkerFromWaypoint(WayPoint wp){
@@ -171,10 +190,10 @@ public class iMap extends Fragment implements
         mo.anchor(0, 0);
         return mo;
     }
-    private MarkerOptions init_waypoint()
+    private MarkerOptions init_waypoint_status(float wps)
     {
         MarkerOptions mo=new MarkerOptions();
-        mo.icon(BitmapDescriptorFactory.defaultMarker(WayPointStatus.Wait)) ;
+        mo.icon(BitmapDescriptorFactory.defaultMarker(wps)) ;
         return mo;
     }
     private void init_buttons(View view)
@@ -184,7 +203,7 @@ public class iMap extends Fragment implements
             @Override
             public void onClick(View v) {//Two kind of statuses,editing and adding
                 showMapbar(designFrg);
-                mMapOptStatus=MapOperationStatus.Design;
+                mMapOptStatus = MapOperationStatus.Design;
             }
         });
         fab_set=(FloatingActionButton)view.findViewById(R.id.set_line);
@@ -238,9 +257,11 @@ public class iMap extends Fragment implements
 
         mPlane=mMap.addMarker(init_plane());
         mArea=new WayPointArea();
-        mWayPoints=new ArrayList<>();
-        mWayPoints_string=new ArrayList<>();
-        mWayPoints_latlng=new ArrayList<>();
+        setWayPoints(new ArrayList<WayPoint>());
+        //mWayPoints=new ArrayList<>();
+        //mWayPoints_string=new ArrayList<>();
+        //mWayPoints_latlng=new ArrayList<>();
+        //mWayPoints_marker=new ArrayList<>();
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -276,16 +297,17 @@ public class iMap extends Fragment implements
                 if (mArea.getCount() > 3) {
                     mArea.clear();
                     mMap.clear();
-                    mWayPoints = new ArrayList<>();
-                    mWayPoints_latlng = new ArrayList<>();
-                    mWayPoints_string = new ArrayList<>();
+                    setWayPoints(new ArrayList<WayPoint>());
+                    //mWayPoints = new ArrayList<>();
+                    //mWayPoints_latlng = new ArrayList<>();
+                    //mWayPoints_string = new ArrayList<>();
                 }
                 mArea.add(new GPS().mar2GPS(latLng));
                 if (mArea.getCount() == 3) {
-                    DJIFlightControllerDataType.DJILocationCoordinate2D _4th = new CalcBox().calc4thPoint(new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(0).latitude,mArea.area_points.get(0).longitude),
-                            new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(1).latitude,mArea.area_points.get(1).longitude),
-                            new DJIFlightControllerDataType.DJILocationCoordinate2D(mArea.area_points.get(2).latitude,mArea.area_points.get(2).longitude));
-                    mArea.add(new LatLng(_4th.getLatitude(), _4th.getLongitude()));
+                    LatLng _4th = new CalcBox().calc4thPoint(mArea.area_points.get(0),
+                            mArea.area_points.get(1),
+                            mArea.area_points.get(2));
+                    mArea.add(_4th);
                 }
                 mArea.updateArea(mMap);
             }
@@ -353,7 +375,7 @@ public class iMap extends Fragment implements
                     mWayPoints.remove(index);
                     mWayPoints_latlng.remove(index);
                     mWayPoints_string.remove(index);
-                    mLine.setPoints(convertFrom2D(mWayPoints_latlng));
+                    mLine.setPoints(mWayPoints_latlng);
                 }
                 break;
                 case MapOperationStatus.Design: {
@@ -461,7 +483,7 @@ public class iMap extends Fragment implements
             }
         } else if(dialog.toString().equals("")){
             if (which == DialogInterface.BUTTON_POSITIVE)
-                _draw_line();
+                _draw_line(false);
         }
     }
     public static ArrayList<LatLng> convertFrom2D(ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> s)
@@ -469,10 +491,29 @@ public class iMap extends Fragment implements
         ArrayList<LatLng> r=new ArrayList<>();
         for(DJIFlightControllerDataType.DJILocationCoordinate2D ss:s)
         {
-            r.add(iMap.fromGPSToMar(new LatLng(ss.getLatitude(),ss.getLongitude())));
+            r.add(iMap.fromGPSToMar(new LatLng(ss.getLatitude(), ss.getLongitude())));
         }
         return r;
     }
+    public  iMap setWayPoints(ArrayList<WayPoint> aaa)
+    {
+        mWayPoints=aaa;
+        if(mWayPoints_string==null || mWayPoints_string.size()!=0)
+            mWayPoints_string=new ArrayList<>();
+        if(mWayPoints_marker==null||mWayPoints_marker.size()!=0)
+            mWayPoints_marker=new ArrayList<>();
+        if(mWayPoints_latlng==null||mWayPoints_latlng.size()!=0)
+            mWayPoints_latlng=new ArrayList<>();
+        /*for(WayPoint wp:aaa) {
+            Marker m = mMap.addMarker(init_waypoint_status(wp.status));
+            m.setPosition(iMap.fromGPSToMar(wp.toLatLng()));
+            mWayPoints_string.add(m.getId());
+            mWayPoints_latlng.add(wp.toLatLng());
+        }*/
+        //drawline();
+        return this;
+    }
+
     public void setOnSaveWayPointListener(OnSaveWayPointListener listener)
     {
         mSvListener=listener;

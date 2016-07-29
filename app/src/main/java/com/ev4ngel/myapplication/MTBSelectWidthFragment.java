@@ -36,7 +36,7 @@ public class MTBSelectWidthFragment extends Fragment implements SeekBar.OnSeekBa
             public void onClick(View v) {
                 iMap map=(iMap)getParentFragment();
                 if (map!=null &&map.mArea.getCount() > 3) {
-                    map.drawline();
+                    map.drawline(false);
                 }
             }
         });

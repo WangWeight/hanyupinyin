@@ -1,6 +1,8 @@
 package com.ev4ngel.autofly_prj;
 
 
+import android.widget.ArrayAdapter;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -84,6 +86,10 @@ public class WayPointFile extends JsonFile{
         WayPoints=a;
         write();
         return this;
+    }
+    public ArrayList<WayPoint> get_waypoints()
+    {
+        return WayPoints;
     }
 
 }

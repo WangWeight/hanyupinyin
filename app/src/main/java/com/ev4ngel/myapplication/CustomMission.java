@@ -56,41 +56,7 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
         rotate_speed=50;
         fly_speed=10;
     }
-    public void initBoundary(ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> _b)
-    {
-        if(_b.size()==0)
-        {
-            boundary=new ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D>();
-        }else
-        {
-            boundary=_b;
-        }
-    }
-    public void generateCoordinates(int space)
-    {
-        if(space==0)
-        {
-            space=1;
-        }
-        CalcBox cb=new CalcBox();
-        switch(boundary.size()) {
-            case 2:{
-                wayPoints = cb.calcOneLinePlanPointList(boundary.get(0),boundary.get(1),space);
-            }break;
-            case 3: {
-                wayPoints = cb.calcNearestPlanPointList(boundary.get(0),boundary.get(1),boundary.get(2),space,fc.getCurrentState().getAircraftLocation().getCoordinate2D());
-            }break;
-            default:
-                ;
-        }
-        StringBuilder sb=new StringBuilder();
-        for(DJIFlightControllerDataType.DJILocationCoordinate2D a:wayPoints)
-        {
-            sb.append(a.getLongitude()+","+a.getLatitude()+",0");
-        }
 
-        Log.i("ev4n",sb.toString());
-    }
     public DJIMission generateInspireMission()
     {
         ArrayList<DJIMissionStep> steps=new ArrayList<DJIMissionStep>() ;

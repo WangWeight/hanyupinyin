@@ -1,8 +1,11 @@
 package com.ev4ngel.autofly_prj;
+import com.amap.api.maps2d.model.LatLng;
 import com.ev4ngel.autofly_prj.IJson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import dji.sdk.FlightController.DJIFlightControllerDataType;
 
 /**
  * Created by Administrator on 2016/7/18.
@@ -25,7 +28,12 @@ public class WayPoint implements IJson{
     {
         lat=lng=status=0;
     }
-
+    public WayPoint(LatLng loc,float s)
+    {
+        lat=loc.latitude;
+        lng=loc.longitude;
+        status=s;
+    }
     @Override
     public JSONObject toJson()
     {
@@ -48,5 +56,13 @@ public class WayPoint implements IJson{
         {
         }
         return new WayPoint();
+    }
+    public LatLng toLatLng()
+    {
+        return new LatLng(lat,lng);
+    }
+    public DJIFlightControllerDataType.DJILocationCoordinate2D toDJI2D()
+    {
+        return new DJIFlightControllerDataType.DJILocationCoordinate2D(lat,lng);
     }
 }

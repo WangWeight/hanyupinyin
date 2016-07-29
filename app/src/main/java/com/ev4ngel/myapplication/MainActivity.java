@@ -638,4 +638,10 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+    public void onLoadNewWayPoints(String wpfile)
+    {
+        mProjectFrg.getProjectInstance().get_wp_file().read(wpfile);
+       // mNavHeadFrg.update();
+        mMapFrg.setWayPoints(mProjectFrg.getProjectInstance().get_wp_file().get_waypoints()).drawline(true);
+    }
 }

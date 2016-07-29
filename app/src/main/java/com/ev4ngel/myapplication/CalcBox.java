@@ -56,9 +56,9 @@ public class CalcBox {
 
     //高斯投影由大地坐标(Unit:Metres)反算经纬度(Unit:DD)
     //y应该是北坐标x应该是东坐标
-    public DJIFlightControllerDataType.DJILocationCoordinate2D gaussProjInvCal(double Y,double X)
+    public LatLng gaussProjInvCal(double Y,double X)
     {
-        DJIFlightControllerDataType.DJILocationCoordinate2D point=new DJIFlightControllerDataType.DJILocationCoordinate2D();
+        //LatLng point=new LatLng();
         int ProjNo; int ZoneWide; ////带宽
         double longitude1, latitude1, longitude0, latitude0, X0, Y0, xval, yval;
         double e1, e2, f, a, ee, NN, T, C, M, D, R, u, fai, iPI;
@@ -92,11 +92,11 @@ public class CalcBox {
         latitude1 = fai - (NN * Math.tan(fai) / R) * (D * D / 2 - (5 + 3 * T + 10 * C - 4 * C * C - 9 * ee) * D * D * D * D / 24
                 + (61 + 90 * T + 298 * C + 45 * T * T - 256 * ee - 3 * C * C) * D * D * D * D * D * D / 720);
         //转换为度 DD
-        point.setLatitude(latitude1/iPI);
-        point.setLongitude(longitude1/iPI);
+        //point.setLatitude();
+        //point.setLongitude();
         //longitude = longitude1 / iPI;
         //latitude = latitude1 / iPI;
-        return  point;
+        return new LatLng(latitude1/iPI,longitude1/iPI);
     }
 
     //直角坐标系下计算
@@ -170,8 +170,8 @@ public class CalcBox {
     }
 
     //单位是度
-    public DJIFlightControllerDataType.DJILocationCoordinate2D coorPosiCalc(double longitude,double latitude,double distance,double angle){
-        DJIFlightControllerDataType.DJILocationCoordinate2D resultePoint=new DJIFlightControllerDataType.DJILocationCoordinate2D();
+    public LatLng coorPosiCalc(double longitude,double latitude,double distance,double angle){
+        LatLng resultePoint;//=new LatLng();
         dian tempPoint=new dian();
         dian point=new dian();
 
@@ -182,36 +182,33 @@ public class CalcBox {
     }
 
     //单位是度
-    public double coorNageCalcDistance(DJIFlightControllerDataType.DJILocationCoordinate2D point1,DJIFlightControllerDataType.DJILocationCoordinate2D point2){
-        dian pointA=gaussProjCal(point1.getLongitude(),point1.getLatitude());
-        dian pointB=gaussProjCal(point2.getLongitude(), point2.getLatitude());
+    public double coorNageCalcDistance(LatLng point1,LatLng point2){
+        dian pointA=gaussProjCal(point1.latitude,point1.longitude);
+        dian pointB=gaussProjCal(point2.latitude, point2.longitude);
 
         return zuoBiaoFanSuan(pointA,pointB);
     }
-    public double coorNageCalcAngle(DJIFlightControllerDataType.DJILocationCoordinate2D point1,DJIFlightControllerDataType.DJILocationCoordinate2D point2){
-        dian pointA=gaussProjCal(point1.getLongitude(),point1.getLatitude());
-        dian pointB=gaussProjCal(point2.getLongitude(),point2.getLatitude());
+    public double coorNageCalcAngle(LatLng point1,LatLng point2){
+        dian pointA=gaussProjCal(point1.latitude,point1.longitude);
+        dian pointB=gaussProjCal(point2.latitude,point2.longitude);
 
         return jisuanfangwei(pointA.getX(),pointB.getX(),pointA.getY(),pointB.getY());
     }
 
-    public static DJIFlightControllerDataType.DJILocationCoordinate2D panduandms(DJIFlightControllerDataType.DJILocationCoordinate2D point)
+    public static LatLng panduandms(LatLng point)
     {
-        DJIFlightControllerDataType.DJILocationCoordinate2D a = new DJIFlightControllerDataType.DJILocationCoordinate2D();
+        LatLng a = new LatLng(point.latitude,point.longitude);
         try
         {
-            a.setLongitude(point.getLongitude());
-            a.setLatitude(point.getLatitude());
 
-            if ((a.getLongitude() > 100 && a.getLongitude() < 180 && a.getLatitude() > 0 && a.getLatitude() < 100))
+            if ((a.latitude > 100 && a.latitude < 180 && a.longitude > 0 && a.longitude < 100))
             {
 
             }
-            else if ((a.getLongitude() > 0 && a.getLongitude() < 100 && a.getLatitude() > 100 && a.getLatitude() < 180))
+            else if ((a.latitude > 0 && a.latitude < 100 && a.longitude > 100 && a.longitude < 180))
             {
-                double temp = a.getLongitude();
-                a.setLongitude(a.getLongitude());
-                a.setLatitude(temp);
+                double temp = a.latitude;
+                a=new LatLng(a.longitude,temp);
             }
         }
         catch (Exception e)
@@ -223,27 +220,23 @@ public class CalcBox {
     //|     |
     //4-----3
     //点位示意
-    public ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> calcPlanPointList(DJIFlightControllerDataType.DJILocationCoordinate2D point1,
-                                                                                            DJIFlightControllerDataType.DJILocationCoordinate2D point2,
-                                                                                            DJIFlightControllerDataType.DJILocationCoordinate2D point3,
-                                                                                            double dianJianGe){
+    public ArrayList<LatLng> calcPlanPointList(LatLng point1,LatLng point2,LatLng point3,double dianJianGe){
+        ArrayList<LatLng> pointList=new ArrayList<>();
+        ArrayList<LatLng> tempList=new ArrayList<>();
+        ArrayList<LatLng> shu14List=new ArrayList<>();
+        ArrayList<LatLng> shu23List=new ArrayList<>();
 
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> pointList=new ArrayList<>();
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> tempList=new ArrayList<>();
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> shu14List=new ArrayList<>();
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> shu23List=new ArrayList<>();
-
-        dian pointA=gaussProjCal(point1.getLongitude(),point1.getLatitude());
-        dian pointB=gaussProjCal(point2.getLongitude(),point2.getLatitude());
-        //dian pointC=gaussProjCal(point3.getLongitude(),point3.getLatitude());
+        dian pointA=gaussProjCal(point1.latitude,point1.longitude);
+        dian pointB=gaussProjCal(point2.latitude,point2.longitude);
+        //dian pointC=gaussProjCal(point3.latitude,point3.longitude);
 
         double distance12=coorNageCalcDistance(point1,point2);
 
 
         double angle12=jisuanfangwei(pointA.getX(),pointB.getX(),pointA.getY(),pointB.getY());
 
-        DJIFlightControllerDataType.DJILocationCoordinate2D point4=coorPosiCalc(point3.getLongitude(),point3.getLatitude(),distance12,angle12+Math.PI);
-        //dian pointD=gaussProjCal(point4.getLongitude(),point4.getLatitude());
+        LatLng point4=coorPosiCalc(point3.latitude,point3.longitude,distance12,angle12+Math.PI);
+        //dian pointD=gaussProjCal(point4.latitude,point4.longitude);
         double distance14=coorNageCalcDistance(point1,point4);
         //double angle14=jisuanfangwei(pointA.getX(),pointD.getX(),pointA.getY(),pointD.getY());
 
@@ -264,7 +257,7 @@ public class CalcBox {
             tempList=calcOneLinePlanPointList(shu14List.get(i),shu23List.get(i),dianJianGe);
             //隔条航带逆序
             if (i%2==0){
-                for (DJIFlightControllerDataType.DJILocationCoordinate2D item:tempList
+                for (LatLng item:tempList
                         ) {
                     pointList.add(item);
                 }
@@ -279,15 +272,11 @@ public class CalcBox {
         }
         return pointList;
     }
-    private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> calcPlanPointList1(DJIFlightControllerDataType.DJILocationCoordinate2D point1,
-                                                                                              DJIFlightControllerDataType.DJILocationCoordinate2D point2,
-                                                                                              DJIFlightControllerDataType.DJILocationCoordinate2D point3,
-                                                                                              DJIFlightControllerDataType.DJILocationCoordinate2D point4,
-                                                                                              double dianJianGe,double pangXiangJianGe){
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> shu13List=calcOneLinePlanPointList(point1,point3,dianJianGe);
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> shu24List=calcOneLinePlanPointList(point2,point4,dianJianGe);
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> tempList=new ArrayList<>();
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> pointList=new ArrayList<>();
+    private ArrayList<LatLng> calcPlanPointList1(LatLng point1,LatLng point2, LatLng point3,LatLng point4,double dianJianGe,double pangXiangJianGe){
+        ArrayList<LatLng> shu13List=calcOneLinePlanPointList(point1,point3,dianJianGe);
+        ArrayList<LatLng> shu24List=calcOneLinePlanPointList(point2,point4,dianJianGe);
+        ArrayList<LatLng> tempList=new ArrayList<>();
+        ArrayList<LatLng> pointList=new ArrayList<>();
 
         double distance13=coorNageCalcDistance(point1,point3);
         double distance12=coorNageCalcDistance(point1,point2);
@@ -320,7 +309,7 @@ public class CalcBox {
             tempList=calcOneLinePlanPointList(shu13List.get(i),shu24List.get(i),dianJianGe);
             //隔条航带逆序
             if (i%2==0){
-                for (DJIFlightControllerDataType.DJILocationCoordinate2D item:tempList
+                for (LatLng item:tempList
                         ) {
                     pointList.add(item);
                 }
@@ -337,20 +326,18 @@ public class CalcBox {
         return pointList;
 
     }
-    public ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> calcOneLinePlanPointList(DJIFlightControllerDataType.DJILocationCoordinate2D point1,
-                                                                                                   DJIFlightControllerDataType.DJILocationCoordinate2D point2,
-                                                                                                   double dianJianGe) {
+    public ArrayList<LatLng> calcOneLinePlanPointList(LatLng point1,LatLng point2,double dianJianGe) {
         double distance = coorNageCalcDistance(point1, point2);
         double angle = coorNageCalcAngle(point1, point2);
         if (distance<dianJianGe) return null;
         double count = distance / dianJianGe;
 
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> resultlist=new ArrayList<>();
-        DJIFlightControllerDataType.DJILocationCoordinate2D tempPoint;
+        ArrayList<LatLng> resultlist=new ArrayList<>();
+        LatLng tempPoint;
         resultlist.add(panduandms(point1));
         tempPoint=point1;
         for (double i=1;i<=count;i=i+1){
-            tempPoint=coorPosiCalc(tempPoint.getLongitude(),tempPoint.getLatitude(),dianJianGe,angle);
+            tempPoint=coorPosiCalc(tempPoint.latitude,tempPoint.longitude,dianJianGe,angle);
             resultlist.add(panduandms(tempPoint));
         }
         //判断距离除以间隔距离是否整除，如果不整除则把point2加到list里
@@ -358,7 +345,7 @@ public class CalcBox {
             resultlist.add(point2);
         }
         return resultlist;
-        //tempPoint=coorPosiCalc(point1.getLongitude(),point1.getLatitude(),dianJianGe,angle);
+        //tempPoint=coorPosiCalc(point1.latitude,point1.longitude,dianJianGe,angle);
     }
 
     /*
@@ -367,52 +354,48 @@ public class CalcBox {
     * |   |
     * 4---3
     * */
-    public ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> calcNearestPlanPointList(DJIFlightControllerDataType.DJILocationCoordinate2D point1,
-                                                                                                   DJIFlightControllerDataType.DJILocationCoordinate2D point2,
-                                                                                                   DJIFlightControllerDataType.DJILocationCoordinate2D point3,
-                                                                                                   double dianJianGe,
-                                                                                                   DJIFlightControllerDataType.DJILocationCoordinate2D startPoint){
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> sortList=calcNearest(point1,point2,point3,coorPosiCalc(point3.getLongitude(),point3.getLatitude(),coorNageCalcDistance(point1,point2),coorNageCalcAngle(point2,point1)),startPoint);
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> resulteList=calcPlanPointList1(sortList.get(0),sortList.get(2),sortList.get(1),sortList.get(3),dianJianGe,0);
+    public ArrayList<LatLng> calcNearestPlanPointList(LatLng point1,LatLng point2,LatLng point3,double dianJianGe, LatLng startPoint){
+        ArrayList<LatLng> sortList=calcNearest(point1,point2,point3,coorPosiCalc(point3.latitude,point3.longitude,coorNageCalcDistance(point1,point2),coorNageCalcAngle(point2,point1)),startPoint);
+        ArrayList<LatLng> resulteList=calcPlanPointList1(sortList.get(0),sortList.get(2),sortList.get(1),sortList.get(3),dianJianGe,0);
 
         return resulteList;
         //DJILocationCoordinate2D point4=coorPosiCalc()
     }
-    public ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> calcNearestPlanPointList(DJIFlightControllerDataType.DJILocationCoordinate2D point1,
-                                                                                                   DJIFlightControllerDataType.DJILocationCoordinate2D point2,
-                                                                                                   DJIFlightControllerDataType.DJILocationCoordinate2D point3,
+    public ArrayList<LatLng> calcNearestPlanPointList(LatLng point1,
+                                                                                                   LatLng point2,
+                                                                                                   LatLng point3,
                                                                                                    double dianJianGe,
-                                                                                                   DJIFlightControllerDataType.DJILocationCoordinate2D startPoint,
+                                                                                                   LatLng startPoint,
                                                                                                    double pangxiangjiange
     ){
-        DJIFlightControllerDataType.DJILocationCoordinate2D point4=calc4thPoint(point1,point2,point3);
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> sortList=calcNearest(point1,point2,point3,point4,startPoint);
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> resulteList=calcPlanPointList1(sortList.get(0),sortList.get(2),sortList.get(1),sortList.get(3),dianJianGe,pangxiangjiange);
+        LatLng point4=calc4thPoint(point1,point2,point3);
+        ArrayList<LatLng> sortList=calcNearest(point1,point2,point3,point4,startPoint);
+        ArrayList<LatLng> resulteList=calcPlanPointList1(sortList.get(0),sortList.get(2),sortList.get(1),sortList.get(3),dianJianGe,pangxiangjiange);
 
         return resulteList;
     }
 
-    public DJIFlightControllerDataType.DJILocationCoordinate2D calc4thPoint(DJIFlightControllerDataType.DJILocationCoordinate2D point1,
-                                                                            DJIFlightControllerDataType.DJILocationCoordinate2D point2,
-                                                                            DJIFlightControllerDataType.DJILocationCoordinate2D point3){
-        return coorPosiCalc(point3.getLongitude(),point3.getLatitude(),coorNageCalcDistance(point1,point2),coorNageCalcAngle(point2,point1));
+    public LatLng calc4thPoint(LatLng point1,
+                                                                            LatLng point2,
+                                                                            LatLng point3){
+        return coorPosiCalc(point3.latitude, point3.longitude,coorNageCalcDistance(point1,point2),coorNageCalcAngle(point2,point1));
     }
 
-    private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> calcNearest(DJIFlightControllerDataType.DJILocationCoordinate2D point1,
-                                                                                       DJIFlightControllerDataType.DJILocationCoordinate2D point2,
-                                                                                       DJIFlightControllerDataType.DJILocationCoordinate2D point3,
-                                                                                       DJIFlightControllerDataType.DJILocationCoordinate2D point4,
-                                                                                       DJIFlightControllerDataType.DJILocationCoordinate2D startPoint){
-        ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> resulteList=new ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D>();
+    private ArrayList<LatLng> calcNearest(LatLng point1,
+                                                                                       LatLng point2,
+                                                                                       LatLng point3,
+                                                                                       LatLng point4,
+                                                                                       LatLng startPoint){
+        ArrayList<LatLng> resulteList=new ArrayList<LatLng>();
         resulteList.add(point1);
         resulteList.add(point2);
         resulteList.add(point3);
         resulteList.add(point4);
-        if(startPoint.getLatitude()==0&&startPoint.getLongitude()==0) startPoint=point1;
+        if(startPoint.longitude==0&&startPoint.latitude==0) startPoint=point1;
         for (int i=0;i<4;i++){
             for (int j=i;j<4;j++){
                 if (coorNageCalcDistance(startPoint,resulteList.get(i))  >coorNageCalcDistance(startPoint,resulteList.get(j)) ){
-                    DJIFlightControllerDataType.DJILocationCoordinate2D temp= resulteList.get(i);
+                    LatLng temp= resulteList.get(i);
                     resulteList.set(i,resulteList.get(j));
                     resulteList.set(j,temp);
                 }
