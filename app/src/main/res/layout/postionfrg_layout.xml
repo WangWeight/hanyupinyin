@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              android:layout_width="match_parent"
+              android:layout_height="40dp"
+              android:layout_centerVertical="true"
+              android:layout_marginLeft="10dp"
+              android:layout_marginTop="10dp">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:textSize="@dimen/statefrg_title_size"
+        android:gravity="center_vertical"
+        android:text="位置"/>
+
+    <LinearLayout
+        android:layout_width="@dimen/posfrg_pos_width"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/pos_lat_tv_id"
+            android:text="未知"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/pos_lng_tv_id"
+            android:text="未知"/>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="@dimen/posfrg_pos_title_width"
+        android:layout_height="wrap_content"
+
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textSize="@dimen/statefrg_title_size"
+            android:text="高度"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:id="@+id/pos_alt_tv_id"
+            android:text="未知"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="@dimen/posfrg_pos_title_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textSize="@dimen/statefrg_title_size"
+            android:text="距离上一点"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:id="@+id/pos_distance_tv_id"
+            android:text="未知"/>
+    </LinearLayout>
+
+</LinearLayout>

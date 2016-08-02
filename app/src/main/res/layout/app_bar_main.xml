@@ -56,17 +56,17 @@
                 />
 
         </android.support.v7.widget.Toolbar>
-
+        <FrameLayout
+            android:id="@+id/prj_frg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+        <FrameLayout
+            android:id="@+id/map_frg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
     </android.support.design.widget.AppBarLayout>
 
-    <FrameLayout
-        android:id="@+id/prj_frg"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
-    <FrameLayout
-        android:id="@+id/map_frg"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-    />
+
 </android.support.design.widget.CoordinatorLayout>

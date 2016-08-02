@@ -183,15 +183,16 @@ public class CalcBox {
 
     //单位是度
     public double coorNageCalcDistance(LatLng point1,LatLng point2){
-        dian pointA=gaussProjCal(point1.latitude,point1.longitude);
-        dian pointB=gaussProjCal(point2.latitude, point2.longitude);
+        dian pointA=gaussProjCal(point1.longitude,point1.latitude);
+        dian pointB=gaussProjCal(point2.longitude,point2.latitude);
 
         return zuoBiaoFanSuan(pointA,pointB);
     }
     public double coorNageCalcAngle(LatLng point1,LatLng point2){
-        dian pointA=gaussProjCal(point1.latitude,point1.longitude);
-        dian pointB=gaussProjCal(point2.latitude,point2.longitude);
-
+        //dian pointA=gaussProjCal(point1.latitude,point1.longitude);
+        //dian pointB=gaussProjCal(point2.latitude,point2.longitude);
+        dian pointA=gaussProjCal(point1.longitude,point1.latitude);
+        dian pointB=gaussProjCal(point2.longitude,point2.latitude);
         return jisuanfangwei(pointA.getX(),pointB.getX(),pointA.getY(),pointB.getY());
     }
 
@@ -226,8 +227,8 @@ public class CalcBox {
         ArrayList<LatLng> shu14List=new ArrayList<>();
         ArrayList<LatLng> shu23List=new ArrayList<>();
 
-        dian pointA=gaussProjCal(point1.latitude,point1.longitude);
-        dian pointB=gaussProjCal(point2.latitude,point2.longitude);
+        dian pointA=gaussProjCal(point1.longitude,point1.latitude);
+        dian pointB=gaussProjCal(point2.longitude,point2.latitude);
         //dian pointC=gaussProjCal(point3.latitude,point3.longitude);
 
         double distance12=coorNageCalcDistance(point1,point2);
@@ -361,12 +362,9 @@ public class CalcBox {
         return resulteList;
         //DJILocationCoordinate2D point4=coorPosiCalc()
     }
-    public ArrayList<LatLng> calcNearestPlanPointList(LatLng point1,
-                                                                                                   LatLng point2,
-                                                                                                   LatLng point3,
-                                                                                                   double dianJianGe,
-                                                                                                   LatLng startPoint,
-                                                                                                   double pangxiangjiange
+    public ArrayList<LatLng> calcNearestPlanPointList(LatLng point1,LatLng point2,LatLng point3,double dianJianGe,
+                                                      LatLng startPoint,
+                                                      double pangxiangjiange
     ){
         LatLng point4=calc4thPoint(point1,point2,point3);
         ArrayList<LatLng> sortList=calcNearest(point1,point2,point3,point4,startPoint);
@@ -375,17 +373,11 @@ public class CalcBox {
         return resulteList;
     }
 
-    public LatLng calc4thPoint(LatLng point1,
-                                                                            LatLng point2,
-                                                                            LatLng point3){
-        return coorPosiCalc(point3.latitude, point3.longitude,coorNageCalcDistance(point1,point2),coorNageCalcAngle(point2,point1));
+    public LatLng calc4thPoint(LatLng point1,LatLng point2,LatLng point3){
+        return coorPosiCalc(point3.longitude, point3.latitude,coorNageCalcDistance(point1,point2),coorNageCalcAngle(point2,point1));
     }
 
-    private ArrayList<LatLng> calcNearest(LatLng point1,
-                                                                                       LatLng point2,
-                                                                                       LatLng point3,
-                                                                                       LatLng point4,
-                                                                                       LatLng startPoint){
+    private ArrayList<LatLng> calcNearest(LatLng point1,LatLng point2,LatLng point3,LatLng point4,LatLng startPoint){
         ArrayList<LatLng> resulteList=new ArrayList<LatLng>();
         resulteList.add(point1);
         resulteList.add(point2);

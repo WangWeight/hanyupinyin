@@ -56,6 +56,7 @@ public class iMap extends Fragment implements
     Marker mPlane = null;
     WayPointArea mArea = null;
     private OnSaveWayPointListener mSvListener=null;
+    private OnLoadNewWayPointsListener mLdListener=null;
     public ArrayList<LatLng> mWayPoints_latlng = null;
     ArrayList<WayPoint> mWayPoints = null;
     ArrayList<String> mWayPoints_string = null;
@@ -74,6 +75,8 @@ public class iMap extends Fragment implements
 
     EditText save_name_et;//init when ask dialog showup on fab_save clicked
     AlertDialog save_line_ad;//init when ask
+    AlertDialog pick_line_ad;
+    AlertDialog show_line_ad;
     private MapMode mm=MapMode.Design;
     private LatLng startPoint;//Set it to special point in someday
     public void setMode(MapMode mode) {
@@ -131,10 +134,11 @@ public class iMap extends Fragment implements
         new Handler(AutoflyApplication.getContext().getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                if(!isPointsReady)
+                if (!isPointsReady)
                     cal_waypoints();
                 for (WayPoint loc : mWayPoints) {
                     Marker m = mMap.addMarker(init_waypoint_status(loc.status));
+
                     m.setPosition(iMap.fromGPSToMar(loc.toLatLng()));
                     mWayPoints_string.add(m.getId());
                 }
@@ -156,7 +160,7 @@ public class iMap extends Fragment implements
         if(maybe_number>Common.MAX_NUMBER_OF_WAYPOINTS)
         {
 
-            new AlertDialog.Builder(getActivity())
+            show_line_ad=new AlertDialog.Builder(getActivity())
                     .setTitle("是不是有点多?")
                     .setMessage("大概能有"+maybe_number+"个点(比设置的["+Common.MAX_NUMBER_OF_WAYPOINTS+"]多不少)\n这约莫会占用很长时间(或者当掉你的app)")
                     .setPositiveButton("继续呗", this)
@@ -168,7 +172,7 @@ public class iMap extends Fragment implements
     }
     public Marker makeMarkerFromWaypoint(WayPoint wp){
         MarkerOptions mo=new MarkerOptions();
-        mo.position(new LatLng(wp.lat,wp.lng));
+        mo.position(new LatLng(wp.lat, wp.lng));
         return mMap.addMarker(mo);
     }
     public Marker findMarkerById(String id)
@@ -471,6 +475,9 @@ public class iMap extends Fragment implements
     }
     @Override
     public void onClick(DialogInterface dialog, int which) {
+        if(dialog!=null) {
+
+
         if (dialog.toString().equals(save_line_ad.toString())) {
             if(which==DialogInterface.BUTTON_POSITIVE){
                 String text=save_name_et.getText().toString();
@@ -481,9 +488,13 @@ public class iMap extends Fragment implements
                 }
                 //Toast.makeText(AutoflyApplication.getContext(),save_name_et.getText().toString(),Toast.LENGTH_SHORT).show();
             }
-        } else if(dialog.toString().equals("")){
+        } else if (dialog.toString().equals(pick_line_ad.toString())) {
+            if(mLdListener!=null)
+                mLdListener.onLoadNewWayPoints(mWayPoints_string.get(which));
+        } else if(dialog.toString().equals(show_line_ad.toString())){
             if (which == DialogInterface.BUTTON_POSITIVE)
                 _draw_line(false);
+        }
         }
     }
     public static ArrayList<LatLng> convertFrom2D(ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> s)

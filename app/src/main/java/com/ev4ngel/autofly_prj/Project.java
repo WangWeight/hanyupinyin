@@ -223,7 +223,7 @@ public class Project {
 
     public void load_recent_project()
     {
-        if(mPsc.recent_project.isEmpty())
+        if(mPsc.recent_project==null ||mPsc.recent_project.isEmpty())
         {
             load_project(prj_default_name);
         }else

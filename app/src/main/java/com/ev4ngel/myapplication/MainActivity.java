@@ -522,11 +522,7 @@ public class MainActivity extends AppCompatActivity
                 if (mMissonManager == null) {
                     Tools.i(getApplicationContext(), "MissionManager Not OK");
                 } else {
-                    mCM.initBoundary(boundary);
-                    mCM.generateCoordinates(line_width);
-                    mCM.rotate_speed = rotate_speed;
-                    mCM.fly_speed = fly_speed;
-                    //mMission = (DJICustomMission) mCM.generateMission();
+
                 }
             }break;
             case R.id.prepare_bt: {
@@ -641,7 +637,8 @@ public class MainActivity extends AppCompatActivity
     public void onLoadNewWayPoints(String wpfile)
     {
         mProjectFrg.getProjectInstance().get_wp_file().read(wpfile);
-       // mNavHeadFrg.update();
-        mMapFrg.setWayPoints(mProjectFrg.getProjectInstance().get_wp_file().get_waypoints()).drawline(true);
+        ArrayList<WayPoint> wps=mProjectFrg.getProjectInstance().get_wp_file().get_waypoints();
+        //mNavHeadFrg.update();
+        mMapFrg.setWayPoints(wps).drawline(true);
     }
 }
