@@ -27,8 +27,11 @@ import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.model.Polygon;
 import com.ev4ngel.autofly_prj.OnLoadProjectListener;
 import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
+import com.ev4ngel.autofly_prj.PositionFrg;
 import com.ev4ngel.autofly_prj.Project;
 import com.ev4ngel.autofly_prj.ProjectFragment;
+import com.ev4ngel.autofly_prj.StateFrg;
+import com.ev4ngel.autofly_prj.StateHandler;
 import com.ev4ngel.autofly_prj.WayPoint;
 
 import org.w3c.dom.Text;
@@ -63,7 +66,6 @@ import dji.sdk.base.DJIError;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         Toolbar.OnMenuItemClickListener,
-        DJIFlightControllerDelegate.FlightControllerUpdateSystemStateCallback,
         View.OnClickListener,
         View.OnLongClickListener,
         SeekBar.OnSeekBarChangeListener,
@@ -86,20 +88,13 @@ public class MainActivity extends AppCompatActivity
     //views
     private ArrayList<ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>> missionLocations;
     private Toolbar toolbar;
-    private View projectPage;//project页面
-    private View airlinePage;//航线页面
-    private View settingPage;//设置页面
-    private View camOrMapPage;//相机/地图页面
-    private View mapPage;
-
     private ProjectFragment mProjectFrg;
-    private iMap mMapFrg;
+    private MapFrg mMapFrg;
     private FragmentShower mFrgShow;
-
-    private TextView gpsCountView;//gps数量显示
-    private TextView batteryRemainView;//电池电量显示
-    private TextView batteryVolView;//
-    private TextView isConnectedView;
+    private StateFrg mStateFrg;
+    private PositionFrg mPositionFrg;
+    private StateHandler mStateHandler;
+    private ArrayList<WayPoint> mWayPoints;
     private TextView velX;
     private TextView line_space_view;
     private TextView velY;
@@ -107,17 +102,8 @@ public class MainActivity extends AppCompatActivity
     private TextView posLat;//
     private TextView posLng;
     private TextView posHeight;//
-    private TextView attitudeView;//
-    private TextView batteryTempView;
-
-
-    private BatteryStateUpdateCallback batterCallback;
-    private int line_width = 40;
-
     //tools
     T log;
-    private Map mMap=null;
-    private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> boundary = null;
     private CustomMission mCM = null;
     private int fly_speed = 15;
     private int rotate_speed = 90;
@@ -132,13 +118,11 @@ public class MainActivity extends AppCompatActivity
                 getBattery();
                 getFlightController();
                 registerComponentListener();
-                isConnectedView.setText(Common.is_connected_yes);
                 if (mMissonManager == null) {
                     mMissonManager = DJIMissionManager.getInstance();
                 }
                 mCM.initComponet(flightController,gimbal,camera);
             } else {
-                isConnectedView.setText(Common.is_connected_no);
                 mMissonManager = null;
                 camera = null;
                 battery = null;
@@ -149,9 +133,14 @@ public class MainActivity extends AppCompatActivity
     };
 
     public void registerComponentListener() {
-        //battery.setBatteryStateUpdateCallback(this);
+        mStateHandler=new StateHandler();
+        mStateHandler.setSF(mStateFrg);
+        mStateHandler.setPF(mPositionFrg);
+        mStateHandler.setMap(mMapFrg);
+        battery.setBatteryStateUpdateCallback(mStateHandler);
         //camera.setDJICameraGeneratedNewMediaFileCallback(mCM);
-        //flightController.setUpdateSystemStateCallback(this);
+        camera.setDJIUpdateCameraSDCardStateCallBack(mStateHandler);
+        flightController.setUpdateSystemStateCallback(mStateHandler);
 
     }
 
@@ -281,17 +270,7 @@ public class MainActivity extends AppCompatActivity
 
     private void initUi() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        gpsCountView = (TextView) findViewById(R.id.gps_count);
-        batteryRemainView = (TextView) findViewById(R.id.battery_view);
-        batteryVolView = (TextView) findViewById(R.id.battery_vol_view);
-        batteryTempView = (TextView) findViewById(R.id.battery_temp_view);
-        //startFab=(FloatingActionButton)findViewById(R.id.start_fab);
-        //pauseFab=(FloatingActionButton)findViewById(R.id.pause_fab);
-        //resumeFab=(FloatingActionButton)findViewById(R.id.resume_fab);
-        //camFab.setBackground(getResources().getDrawable(R.drawable.box,getTheme()));
-        isConnectedView = (TextView) findViewById(R.id.is_connected);
-        line_space_view = (TextView) findViewById(R.id.line_space);
-        //gimbalFab.setBackgroundColor(getResources().getColor(R.color.fad_invalid,getTheme()));
+         //gimbalFab.setBackgroundColor(getResources().getColor(R.color.fad_invalid,getTheme()));
 
         //mMap=new Map((MapView)findViewById(R.id.map_view));
 
@@ -300,14 +279,17 @@ public class MainActivity extends AppCompatActivity
     private void initParams() {
         initUi();
         mProjectFrg=new ProjectFragment();
-        mMapFrg=new iMap();
+        mMapFrg=new MapFrg();
         mFrgShow=new FragmentShower(getFragmentManager());
         mFrgShow.add(R.id.prj_frg,mProjectFrg,prj_frg_tag)
                 .add(R.id.map_frg,mMapFrg,map_frg_tag)
                 .show(mProjectFrg);
-
+        mStateFrg=new StateFrg();
+        mPositionFrg=new PositionFrg();
+        getFragmentManager().beginTransaction().add(R.id.state_frg,mStateFrg,"state_frg").add(R.id.position_frg,mPositionFrg,"position_frg").commit();
         if(mCM==null)
             mCM = new CustomMission(log);
+
     }
 
     private void _registerReceiver() {
@@ -324,7 +306,6 @@ public class MainActivity extends AppCompatActivity
         //mMapFrg.onCreate(savedInstanceState);
         //init in initUi
         _registerReceiver();
-        batterCallback = new BatteryStateUpdateCallback(batteryVolView, batteryRemainView, batteryTempView);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -389,7 +370,7 @@ public class MainActivity extends AppCompatActivity
             mMapFrg.setMode(MapMode.Reference);
             mFrgShow.show(mMapFrg);
         } else if (id == R.id.nav_settings) {
-            settingPage.setVisibility(View.VISIBLE);
+
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
@@ -445,11 +426,6 @@ public class MainActivity extends AppCompatActivity
         return false;
     }
 
-    @Override
-    public void onResult(DJIFlightControllerDataType.DJIFlightControllerCurrentState state) {
-        gpsCountView.setText("" + state.getSatelliteCount());
-
-    }
 
     @Override
     public boolean onLongClick(View v) {
@@ -498,7 +474,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        line_width = progress;
         line_space_view.setText(progress + "m");
     }
 
@@ -631,14 +606,15 @@ public class MainActivity extends AppCompatActivity
             if(mProjectFrg!=null)
             {
                 mProjectFrg.getProjectInstance().new_airway(fname).get_wp_file().set_waypoints(wps);
+                mWayPoints=wps;
             }
         }
     }
     public void onLoadNewWayPoints(String wpfile)
     {
         mProjectFrg.getProjectInstance().get_wp_file().read(wpfile);
-        ArrayList<WayPoint> wps=mProjectFrg.getProjectInstance().get_wp_file().get_waypoints();
+        mWayPoints=mProjectFrg.getProjectInstance().get_wp_file().get_waypoints();
         //mNavHeadFrg.update();
-        mMapFrg.setWayPoints(wps).drawline(true);
+        mMapFrg.setWayPoints(mWayPoints).drawline(true);
     }
 }

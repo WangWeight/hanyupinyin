@@ -5,8 +5,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.dji.sdk.sample.battery.PositionFrg;
-import com.dji.sdk.sample.battery.StateFrg;
+import com.amap.api.maps2d.model.LatLng;
+import com.ev4ngel.myapplication.Map;
+import com.ev4ngel.myapplication.MapFrg;
 
 import dji.sdk.Battery.DJIBattery;
 import dji.sdk.Camera.DJICamera;
@@ -23,6 +24,7 @@ public class StateHandler extends Handler implements
 {
     StateFrg mSF;
     PositionFrg mPF;
+    MapFrg mMap;
     final int vol_id=0x01;
     final int salt_id=0x02;
     final int space_id=0x03;
@@ -35,6 +37,10 @@ public class StateHandler extends Handler implements
         mSF = SF;
     }
 
+    public void setMap(MapFrg map) {
+        mMap = map;
+    }
+
     @Override
     public void handleMessage(Message msg) {
         Log.i("E", "xxxxxx" + msg.what);
@@ -45,8 +51,9 @@ public class StateHandler extends Handler implements
             }break;
             case salt_id:{
                 Bundle b=msg.getData();
-                mPF.set_pos(b.getDouble("lat"),b.getDouble("lng"),b.getDouble("alt"));
+                mPF.set_pos(b.getDouble("lat"), b.getDouble("lng"), b.getDouble("alt"));
                 mSF.setSalt_tv_text(b.getDouble("sat_num"));
+                mMap.updatePlane(new LatLng(b.getDouble("lat"),b.getDouble("lng")),b.getInt("heading"));
             }break;
             case space_id:{
                 mSF.setSpace_tv_text(msg.getData().getString("text"));
@@ -81,6 +88,7 @@ public class StateHandler extends Handler implements
         b.putDouble("lat",tmp.getLatitude());
         b.putDouble("lng", tmp.getLongitude());
         b.putFloat("alt", tmp.getAltitude());
+        b.putInt("heading", djiFlightControllerCurrentState.getAircraftHeadDirection());
         b.putDouble("sat_num", djiFlightControllerCurrentState.getSatelliteCount());
         m.setData(b);
         m.what=salt_id;

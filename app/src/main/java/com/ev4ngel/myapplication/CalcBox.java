@@ -201,16 +201,11 @@ public class CalcBox {
         LatLng a = new LatLng(point.latitude,point.longitude);
         try
         {
-
-            if ((a.latitude > 100 && a.latitude < 180 && a.longitude > 0 && a.longitude < 100))
-            {
-
-            }
-            else if ((a.latitude > 0 && a.latitude < 100 && a.longitude > 100 && a.longitude < 180))
-            {
-                double temp = a.latitude;
-                a=new LatLng(a.longitude,temp);
-            }
+         if ((a.longitude > 0 && a.longitude < 100 && a.latitude > 100 && a.latitude < 180))
+        {
+            //double temp = a.latitude;
+            a=new LatLng(a.longitude,a.latitude);
+        }
         }
         catch (Exception e)
         { }
@@ -236,7 +231,7 @@ public class CalcBox {
 
         double angle12=jisuanfangwei(pointA.getX(),pointB.getX(),pointA.getY(),pointB.getY());
 
-        LatLng point4=coorPosiCalc(point3.latitude,point3.longitude,distance12,angle12+Math.PI);
+        LatLng point4=coorPosiCalc(point3.longitude,point3.latitude,distance12,angle12+Math.PI);
         //dian pointD=gaussProjCal(point4.latitude,point4.longitude);
         double distance14=coorNageCalcDistance(point1,point4);
         //double angle14=jisuanfangwei(pointA.getX(),pointD.getX(),pointA.getY(),pointD.getY());
@@ -338,7 +333,7 @@ public class CalcBox {
         resultlist.add(panduandms(point1));
         tempPoint=point1;
         for (double i=1;i<=count;i=i+1){
-            tempPoint=coorPosiCalc(tempPoint.latitude,tempPoint.longitude,dianJianGe,angle);
+            tempPoint=coorPosiCalc(tempPoint.longitude,tempPoint.latitude,dianJianGe,angle);
             resultlist.add(panduandms(tempPoint));
         }
         //判断距离除以间隔距离是否整除，如果不整除则把point2加到list里
@@ -356,7 +351,7 @@ public class CalcBox {
     * 4---3
     * */
     public ArrayList<LatLng> calcNearestPlanPointList(LatLng point1,LatLng point2,LatLng point3,double dianJianGe, LatLng startPoint){
-        ArrayList<LatLng> sortList=calcNearest(point1,point2,point3,coorPosiCalc(point3.latitude,point3.longitude,coorNageCalcDistance(point1,point2),coorNageCalcAngle(point2,point1)),startPoint);
+        ArrayList<LatLng> sortList=calcNearest(point1,point2,point3,coorPosiCalc(point3.longitude,point3.latitude,coorNageCalcDistance(point1,point2),coorNageCalcAngle(point2,point1)),startPoint);
         ArrayList<LatLng> resulteList=calcPlanPointList1(sortList.get(0),sortList.get(2),sortList.get(1),sortList.get(3),dianJianGe,0);
 
         return resulteList;

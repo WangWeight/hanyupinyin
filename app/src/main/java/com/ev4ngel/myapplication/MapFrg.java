@@ -43,7 +43,7 @@ import dji.sdk.FlightController.DJIFlightControllerDataType;
 /**
  * Created by Administrator on 2016/7/15.
  */
-public class iMap extends Fragment implements
+public class MapFrg extends Fragment implements
         AMap.OnMapClickListener,
         AMapLocationListener,
         LocationSource,
@@ -77,6 +77,7 @@ public class iMap extends Fragment implements
     AlertDialog save_line_ad;//init when ask
     AlertDialog pick_line_ad;
     AlertDialog show_line_ad;
+    private boolean isLocating=false;
     private MapMode mm=MapMode.Design;
     private LatLng startPoint;//Set it to special point in someday
     public void setMode(MapMode mode) {
@@ -104,8 +105,12 @@ public class iMap extends Fragment implements
     }
     public void updatePlane(LatLng pos,float angle)
     {
-        mPlane.setPosition(iMap.fromGPSToMar(pos));
+
+        mPlane.setPosition(MapFrg.fromGPSToMar(pos));
         mPlane.setRotateAngle(angle);
+        if(!isLocating)
+            moveTo(pos);
+        isLocating=true;
     }
 
     public void cal_waypoints()
@@ -122,10 +127,10 @@ public class iMap extends Fragment implements
                 selectWidthFrg.getDirectionWidth(),
                 startPoint,
                 selectWidthFrg.getSideWidth());
+        if(mWayPoints==null ||mWayPoints.size()>0)
+            mWayPoints=new ArrayList<>();
         for(LatLng loc:mWayPoints_latlng)
         {
-            if(mWayPoints==null ||mWayPoints.size()>0)
-                mWayPoints=new ArrayList<>();
             mWayPoints.add(new WayPoint(loc,WayPointStatus.Wait));
         }
     }
@@ -139,7 +144,8 @@ public class iMap extends Fragment implements
                 for (WayPoint loc : mWayPoints) {
                     Marker m = mMap.addMarker(init_waypoint_status(loc.status));
 
-                    m.setPosition(iMap.fromGPSToMar(loc.toLatLng()));
+                    m.setPosition(MapFrg.fromGPSToMar(loc.toLatLng()));
+                    m.setTitle(m.getId());
                     mWayPoints_string.add(m.getId());
                 }
                 if (mLine == null) {
@@ -240,7 +246,7 @@ public class iMap extends Fragment implements
                     save_line_ad = new AlertDialog.Builder(getActivity())
                             .setTitle("输入航线名称")
                             .setView(vv)
-                            .setPositiveButton("保存", iMap.this)
+                            .setPositiveButton("保存", MapFrg.this)
                             .setNegativeButton("取消", null).create();
                     save_line_ad.show();
                 }
@@ -502,11 +508,11 @@ public class iMap extends Fragment implements
         ArrayList<LatLng> r=new ArrayList<>();
         for(DJIFlightControllerDataType.DJILocationCoordinate2D ss:s)
         {
-            r.add(iMap.fromGPSToMar(new LatLng(ss.getLatitude(), ss.getLongitude())));
+            r.add(MapFrg.fromGPSToMar(new LatLng(ss.getLatitude(), ss.getLongitude())));
         }
         return r;
     }
-    public  iMap setWayPoints(ArrayList<WayPoint> aaa)
+    public  MapFrg setWayPoints(ArrayList<WayPoint> aaa)
     {
         mWayPoints=aaa;
         if(mWayPoints_string==null || mWayPoints_string.size()!=0)
@@ -517,7 +523,7 @@ public class iMap extends Fragment implements
             mWayPoints_latlng=new ArrayList<>();
         /*for(WayPoint wp:aaa) {
             Marker m = mMap.addMarker(init_waypoint_status(wp.status));
-            m.setPosition(iMap.fromGPSToMar(wp.toLatLng()));
+            m.setPosition(MapFrg.fromGPSToMar(wp.toLatLng()));
             mWayPoints_string.add(m.getId());
             mWayPoints_latlng.add(wp.toLatLng());
         }*/

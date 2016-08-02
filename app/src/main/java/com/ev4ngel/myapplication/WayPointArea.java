@@ -43,7 +43,7 @@ public class WayPointArea {
     {
         for(int i=area_side.size();i<area_points.size();i++) {
             Marker m = map.addMarker(new MarkerOptions());
-            m.setPosition(iMap.fromGPSToMar(area_points.get(i)));
+            m.setPosition(MapFrg.fromGPSToMar(area_points.get(i)));
             m.setDraggable(true);
             area_side.add(m);
         }
@@ -53,7 +53,7 @@ public class WayPointArea {
             ArrayList<LatLng> tmp=new ArrayList<>();
             for(LatLng loc:area_points)
             {
-                tmp.add(iMap.fromGPSToMar(loc));
+                tmp.add(MapFrg.fromGPSToMar(loc));
             }
             mPolygon.setPoints(tmp);
         }

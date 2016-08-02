@@ -17,7 +17,7 @@ public class MTBSelectWidthFragment extends Fragment implements SeekBar.OnSeekBa
     private SeekBar sb1;
     private SeekBar sb2;
     private Button sbb;
-    private iMap mMapFrg;
+    private MapFrg mMapFrg;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -34,9 +34,9 @@ public class MTBSelectWidthFragment extends Fragment implements SeekBar.OnSeekBa
         sbb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                iMap map=(iMap)getParentFragment();
-                if (map!=null &&map.mArea.getCount() > 3) {
-                    map.drawline(false);
+                mMapFrg=(MapFrg)getParentFragment();
+                if (mMapFrg!=null &&mMapFrg.mArea.getCount() > 3) {
+                    mMapFrg.drawline(false);
                 }
             }
         });
