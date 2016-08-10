@@ -24,7 +24,7 @@ public class PositionFrg extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View v=inflater.inflate(R.layout.postionfrg_layout,container,false);
+        View v=inflater.inflate(R.layout.positionfrg_layout,container,false);
         lat_tv=(TextView)v.findViewById(R.id.pos_lat_tv_id);
         lng_tv=(TextView)v.findViewById(R.id.pos_lng_tv_id);
         alt_tv=(TextView)v.findViewById(R.id.pos_alt_tv_id);

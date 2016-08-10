@@ -23,6 +23,29 @@ public class FragmentShower {
         fragments.add(f);
         return this;
     }
+    public FragmentShower add(int container_id,Fragment f,String tag,boolean alwaysShow)
+    {
+        if(alwaysShow){
+            mFm.beginTransaction().add(container_id, f, tag).commit();
+        }
+        return this;
+    }
+    public FragmentShower show(String[] tags)
+    {
+        FragmentTransaction ft=mFm.beginTransaction();
+        for(Fragment ff:fragments)
+        {
+            for(String tag:tags) {
+                if (ff.getTag().equals(tag)) {
+                    ft.show(ff);
+                } else {
+                    ft.hide(ff);
+                }
+            }
+        }
+        ft.commit();
+        return this;
+    }
     public FragmentShower show(Fragment f)
     {
         FragmentTransaction ft=mFm.beginTransaction();

@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.ev4ngel.autofly_prj.OnLoadProjectListener;
 import com.ev4ngel.autofly_prj.OnPrepareMissionListener;
@@ -25,12 +26,15 @@ public class MissionFrg extends Fragment implements View.OnClickListener,DialogI
     TextView fly_speed_tv;
     TextView rotate_speed_tv;
     TextView return_height_tv;
-
+    ToggleButton mission_opt_tb;
+    ToggleButton gohome_opt_tb;
     AlertDialog ask_dialog;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View layout=inflater.inflate(R.layout.frg_mission_layout,container,false);
+        mission_opt_tb=(ToggleButton)layout.findViewById(R.id.mission_opt_tb);
+        gohome_opt_tb=(ToggleButton)layout.findViewById(R.id.gohome_opt_tb);
         View v=LayoutInflater.from(getActivity()).inflate(R.layout.frg_missionfrg_dialog,null);
         ask_dialog=new AlertDialog.Builder(getActivity())
                 .setTitle("确定信息")
@@ -55,7 +59,8 @@ public class MissionFrg extends Fragment implements View.OnClickListener,DialogI
 
     public void init_listeners()
     {
-
+        gohome_opt_tb.setOnClickListener(this);
+        mission_opt_tb.setOnClickListener(this);
     }
     public void setFly_speed(float value)
     {
@@ -64,13 +69,24 @@ public class MissionFrg extends Fragment implements View.OnClickListener,DialogI
     }
     public void setReturn_height(int value)
     {
-        return_height_tv.setText(value+"m/s");
+        return_height_tv.setText(value + "m/s");
         return_height_sb.setProgress(value);
     }
 
     @Override
     public void onClick(View v) {
+        if(v.getId()==gohome_opt_tb.getId())
+        {
 
+        }else{
+            if(v.getId()==mission_opt_tb.getId()){
+                if(mission_opt_tb.isChecked()){
+                    ask_dialog.show();
+                }else{
+                    mListener.onPrepareMission(0,0,2);
+                }
+            }
+        }
     }
 
     @Override
@@ -79,6 +95,8 @@ public class MissionFrg extends Fragment implements View.OnClickListener,DialogI
         {
             if(which==DialogInterface.BUTTON_POSITIVE){
                 mListener.onPrepareMission(fly_speed_sb.getProgress(),return_height_sb.getProgress(),0);
+            }else{
+                mission_opt_tb.setChecked(false);
             }
         }
     }

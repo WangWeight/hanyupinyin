@@ -87,6 +87,9 @@ public class MainActivity extends AppCompatActivity
     ///tags setting
     String prj_frg_tag="prj_frg";
     String map_frg_tag="map_frg";
+    String state_frg_tag="state_frg";
+    String position_frg_tag="position_frg";
+    String mission_frg_tag="mission_frg";
     Project mProject=null;
     //views
     private ArrayList<ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>> missionLocations;
@@ -147,14 +150,10 @@ public class MainActivity extends AppCompatActivity
 
 
     public void registerUiListener() {
+        mProjectFrg.setOnLoadProjectListener(this);
         mProjectFrg.getProjectInstance().setOnProjectLoad(this);
         mMapFrg.setOnSaveWayPointListener(this);
         mMissionFrg.setOnPrepareMissionListener(this);
-
-        //startFab.setOnClickListener(this);
-        //pauseFab.setOnClickListener(this);
-        //resumeFab.setOnClickListener(this);
-
     }
 
     private DJIBaseProduct getProduct() {
@@ -212,6 +211,8 @@ public class MainActivity extends AppCompatActivity
         if(AutoflyApplication.getHandHeldInstance()!=null){
             if(remote==null)
                 remote=AutoflyApplication.getAircraftInstance().getRemoteController();
+            if(remote==null)
+                Tools.showToast(getApplicationContext(),"RC fail");
         }
     }
     private void getFlightController()//初始化飞控
@@ -277,15 +278,18 @@ public class MainActivity extends AppCompatActivity
         initUi();
         mProjectFrg=new ProjectFragment();
         mMapFrg=new MapFrg();
+        mStateFrg=new StateFrg();
+        mPositionFrg=new PositionFrg();
+        mMissionFrg=new MissionFrg();
         mFrgShow=new FragmentShower(getFragmentManager());
         mFrgShow.add(R.id.prj_frg,mProjectFrg,prj_frg_tag)
                 .add(R.id.map_frg,mMapFrg,map_frg_tag)
-                .show(mProjectFrg);
-        mStateFrg=new StateFrg();
-        mPositionFrg=new PositionFrg();
-        getFragmentManager().beginTransaction().add(R.id.state_frg,mStateFrg,"state_frg").add(R.id.position_frg,mPositionFrg,"position_frg").commit();
-        mMissionFrg=new MissionFrg();
+                .add(R.id.mission_frg, mMissionFrg, mission_frg_tag)
+                .add(R.id.position_frg, mPositionFrg, position_frg_tag)
+                .add(R.id.state_frg, mStateFrg, state_frg_tag, true)
+                .show(new String[]{prj_frg_tag});
 
+        //getFragmentManager().beginTransaction().add(R.id.state_frg,mStateFrg,"state_frg").commit();
         if(mCM==null) {
             mCM = new CustomMission();
             mCM.setOnNewPictureListener(this);
@@ -363,13 +367,13 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_project) {
             // Handle the camera action
-            mFrgShow.show(mProjectFrg);
+            mFrgShow.show(new String[]{prj_frg_tag});
         } else if (id == R.id.nav_airline) {
             mMapFrg.setMode(MapMode.Design);
-            mFrgShow.show(mMapFrg);
+            mFrgShow.show(new String[]{map_frg_tag});
         } else if (id == R.id.nav_cam_or_map) {
             mMapFrg.setMode(MapMode.Reference);
-            mFrgShow.show(mMapFrg);
+            mFrgShow.show(new String[]{map_frg_tag,position_frg_tag,mission_frg_tag});
         } else if (id == R.id.nav_settings) {
 
         } else if (id == R.id.nav_share) {

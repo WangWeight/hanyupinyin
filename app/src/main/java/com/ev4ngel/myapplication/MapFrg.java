@@ -105,11 +105,11 @@ public class MapFrg extends Fragment implements
     }
     public void updatePlane(LatLng pos,float angle)
     {
-
-        mPlane.setPosition(MapFrg.fromGPSToMar(pos));
+        LatLng tmp=MapFrg.fromGPSToMar(pos);
+        mPlane.setPosition(tmp);
         mPlane.setRotateAngle(angle);
         if(!isLocating)
-            moveTo(pos);
+            moveTo(tmp);
         isLocating=true;
     }
 
@@ -120,6 +120,7 @@ public class MapFrg extends Fragment implements
             startPoint = mArea.area_points.get(0);
         if (mWayPoints_string.size() > 0) {
             mMap.clear();
+
         }
         mWayPoints_latlng = cb.calcNearestPlanPointList(mArea.area_points.get(0),
                 mArea.area_points.get(1),

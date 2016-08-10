@@ -3,5 +3,18 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
-
+    <ToggleButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textOff="开始"
+        android:textOn="暂停"
+        android:id="@+id/mission_opt_tb"
+        android:checked="false"/>
+    <ToggleButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textOn="返航中"
+        android:textOff="返航"
+        android:id="@+id/gohome_opt_tb"
+        android:checked="false"/>
 </LinearLayout>

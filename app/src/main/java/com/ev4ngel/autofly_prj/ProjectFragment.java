@@ -161,6 +161,7 @@ public class ProjectFragment extends Fragment implements
         }
     }
 
+
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         mItem_index=position;
@@ -173,6 +174,10 @@ public class ProjectFragment extends Fragment implements
         mItem_index=position;
         open_prj_ad.show();
     }
+            public void setOnLoadProjectListener(OnLoadProjectListener l){
+                mListener=l;
+            }
+
     public Project getProjectInstance() {
         return mPrj;
     }
