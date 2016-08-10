@@ -5,6 +5,8 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Administrator on 2016/7/28.
@@ -33,14 +35,13 @@ public class FragmentShower {
     public FragmentShower show(String[] tags)
     {
         FragmentTransaction ft=mFm.beginTransaction();
+        List<String> tmp=Arrays.asList(tags);
         for(Fragment ff:fragments)
         {
-            for(String tag:tags) {
-                if (ff.getTag().equals(tag)) {
-                    ft.show(ff);
-                } else {
-                    ft.hide(ff);
-                }
+            if(tmp.contains(ff.getTag())){
+                ft.show(ff);
+            } else {
+                ft.hide(ff);
             }
         }
         ft.commit();

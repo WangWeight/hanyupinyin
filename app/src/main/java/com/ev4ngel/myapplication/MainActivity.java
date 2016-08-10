@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.design.widget.FloatingActionButton;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -564,8 +565,11 @@ public class MainActivity extends AppCompatActivity
         PhotoWayPoint pwp=new PhotoWayPoint();
         //pwp.addPhoto(pname,(float)flightController.getCompass().getHeading(),flightController.);
         mProjectFrg.getProjectInstance().get_pwp_file().addPhotoWayPoint(pwp);
-        if(flightController!=null)
+        Log.i("e",pname);
+        if(flightController!=null) {
+            Log.i("E","in fliaht"+flightController.getCurrentState().getAircraftLocation().getCoordinate2D().toString());
             mStateHandler.setPhotoTakenPosition(flightController.getCurrentState().getAircraftLocation().getCoordinate2D());
+        }
     }
 
     @Override

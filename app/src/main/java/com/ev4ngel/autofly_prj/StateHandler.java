@@ -66,9 +66,12 @@ public class StateHandler extends Handler implements
             case salt_id:{
                 Bundle b=msg.getData();
                 mPF.set_pos(b.getDouble("lat"), b.getDouble("lng"), b.getDouble("alt"));
+                Log.i("handle",b.toString());
                 if(position_aircraft!=null){
+                    Log.i("e","posicraft"+(position_aircraft==null));
                     if(position_last_pic!=null)
                     {
+                        Log.i("e","last_pic"+(position_last_pic==null));
                         mPF.set_last_point_dist(new CalcBox().coorNageCalcDistance(position_aircraft,position_last_pic));
                     }
                     if(position_rc!=null)
