@@ -20,11 +20,13 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingLeft="7dp"
             android:id="@+id/pos_lat_tv_id"
             android:text="未知"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingLeft="7dp"
             android:id="@+id/pos_lng_tv_id"
             android:text="未知"/>
 
@@ -58,12 +60,48 @@
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:textSize="@dimen/statefrg_title_size"
-            android:text="距离上一点"/>
+            android:text="距离上一拍摄点"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:id="@+id/pos_distance_tv_id"
+            android:text="未知"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="@dimen/posfrg_pos_title_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textSize="@dimen/statefrg_title_size"
+            android:text="距离遥控器"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:id="@+id/rc_distance_tv_id"
+            android:text="未知"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="@dimen/posfrg_pos_title_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textSize="@dimen/statefrg_title_size"
+            android:text="距离遥控器方位"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:id="@+id/rc_direction_tv_id"
             android:text="未知"/>
     </LinearLayout>
 

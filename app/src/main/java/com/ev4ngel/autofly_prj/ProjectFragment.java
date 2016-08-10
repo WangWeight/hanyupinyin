@@ -33,19 +33,20 @@ public class ProjectFragment extends Fragment implements
         FloatingActionButton.OnClickListener,
         DialogInterface.OnClickListener,
         ListView.OnItemClickListener,
-        ListView.OnItemLongClickListener{
-    String E="evan";
-    FloatingActionButton Prj_add;
-    EditText prjEt;//init in onClick
-    TextView prjTv;
-    Project mPrj;
-    ListView mLv;
-    ArrayAdapter _aa;
-    AlertDialog new_prj_ad;
-    AlertDialog del_prj_ad;
-    AlertDialog open_prj_ad;
-
-    int mItem_index=0;
+        ListView.OnItemLongClickListener
+        {
+            String E="evan";
+            FloatingActionButton Prj_add;
+            EditText prjEt;//init in onClick
+            TextView prjTv;
+            Project mPrj;
+            ListView mLv;
+            ArrayAdapter _aa;
+            AlertDialog new_prj_ad;
+            AlertDialog del_prj_ad;
+            AlertDialog open_prj_ad;
+            OnLoadProjectListener mListener;
+            int mItem_index=0;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -112,7 +113,8 @@ public class ProjectFragment extends Fragment implements
                 if(which==DialogInterface.BUTTON_POSITIVE)
                 {
                     String s=mPrj.getProjects().get(mItem_index);
-                    mPrj.load_project(mPrj.getProjects().get(mItem_index));
+                    mListener.onLoadProject();
+                    //mPrj.load_project(mPrj.getProjects().get(mItem_index));
                     _aa.notifyDataSetChanged();
                     Log.i(E,s);
                 }

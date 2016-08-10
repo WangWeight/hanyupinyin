@@ -24,9 +24,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amap.api.maps2d.MapView;
+import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Polygon;
 import com.ev4ngel.autofly_prj.OnLoadProjectListener;
+import com.ev4ngel.autofly_prj.OnNewPictureGenerateListener;
+import com.ev4ngel.autofly_prj.OnPrepareMissionListener;
 import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
+import com.ev4ngel.autofly_prj.PhotoWayPoint;
 import com.ev4ngel.autofly_prj.PositionFrg;
 import com.ev4ngel.autofly_prj.Project;
 import com.ev4ngel.autofly_prj.ProjectFragment;
@@ -58,6 +62,7 @@ import dji.sdk.MissionManager.MissionStep.DJIFollowmeMissionStep;
 import dji.sdk.MissionManager.MissionStep.DJIGimbalAttitudeStep;
 import dji.sdk.MissionManager.MissionStep.DJIGoToStep;
 import dji.sdk.MissionManager.MissionStep.DJIMissionStep;
+import dji.sdk.RemoteController.DJIRemoteController;
 import dji.sdk.SDKManager.DJISDKManager;
 import dji.sdk.base.DJIBaseComponent;
 import dji.sdk.base.DJIBaseProduct;
@@ -67,23 +72,21 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         Toolbar.OnMenuItemClickListener,
         View.OnClickListener,
-        View.OnLongClickListener,
-        SeekBar.OnSeekBarChangeListener,
         OnLoadProjectListener,
-        OnSaveWayPointListener{
-
-
+        OnSaveWayPointListener,
+        OnNewPictureGenerateListener,
+        OnPrepareMissionListener{
     private DJIGimbal gimbal = null;
     private DJICamera camera = null;
     private DJIBattery battery = null;
     private DJIFlightController flightController = null;
     private DJIMissionManager mMissonManager = null;
     private DJICustomMission mMission = null;
+    private DJIRemoteController remote=null;
 
     ///tags setting
     String prj_frg_tag="prj_frg";
     String map_frg_tag="map_frg";
-
     Project mProject=null;
     //views
     private ArrayList<ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>> missionLocations;
@@ -93,20 +96,12 @@ public class MainActivity extends AppCompatActivity
     private FragmentShower mFrgShow;
     private StateFrg mStateFrg;
     private PositionFrg mPositionFrg;
+    private MissionFrg mMissionFrg;
     private StateHandler mStateHandler;
     private ArrayList<WayPoint> mWayPoints;
-    private TextView velX;
-    private TextView line_space_view;
-    private TextView velY;
-    private TextView velZ;
-    private TextView posLat;//
-    private TextView posLng;
-    private TextView posHeight;//
     //tools
     T log;
     private CustomMission mCM = null;
-    private int fly_speed = 15;
-    private int rotate_speed = 90;
 
     protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
@@ -117,6 +112,7 @@ public class MainActivity extends AppCompatActivity
                 getGimbal();
                 getBattery();
                 getFlightController();
+                getRemoteController();
                 registerComponentListener();
                 if (mMissonManager == null) {
                     mMissonManager = DJIMissionManager.getInstance();
@@ -128,6 +124,7 @@ public class MainActivity extends AppCompatActivity
                 battery = null;
                 gimbal = null;
                 flightController = null;
+                remote=null;
             }
         }
     };
@@ -137,26 +134,22 @@ public class MainActivity extends AppCompatActivity
         mStateHandler.setSF(mStateFrg);
         mStateHandler.setPF(mPositionFrg);
         mStateHandler.setMap(mMapFrg);
+        if(battery!=null)
         battery.setBatteryStateUpdateCallback(mStateHandler);
         //camera.setDJICameraGeneratedNewMediaFileCallback(mCM);
+        if(camera!=null)
         camera.setDJIUpdateCameraSDCardStateCallBack(mStateHandler);
+        if(flightController!=null)
         flightController.setUpdateSystemStateCallback(mStateHandler);
-
+        if(remote!=null)
+        remote.setGpsDataUpdateCallback(mStateHandler);
     }
 
 
     public void registerUiListener() {
         mProjectFrg.getProjectInstance().setOnProjectLoad(this);
         mMapFrg.setOnSaveWayPointListener(this);
-        //((Button) findViewById(R.id.start_bt)).setOnClickListener(this);
-        //((Button) findViewById(R.id.pause_bt)).setOnClickListener(this);
-        //((Button) findViewById(R.id.resume_bt)).setOnClickListener(this);
-        //((Button) findViewById(R.id.stop_bt)).setOnClickListener(this);
-        //((Button) findViewById(R.id.prepare_bt)).setOnClickListener(this);
-        //((Button) findViewById(R.id.show_pl_bt)).setOnClickListener(this);
-        //((Button) findViewById(R.id.clear_pl_bt)).setOnClickListener(this);
-        //((Button) findViewById(R.id.gen_pl_bt)).setOnClickListener(this);
-
+        mMissionFrg.setOnPrepareMissionListener(this);
 
         //startFab.setOnClickListener(this);
         //pauseFab.setOnClickListener(this);
@@ -198,9 +191,7 @@ public class MainActivity extends AppCompatActivity
                 Tools.showToast(getApplicationContext(), "Init Camera Fail");
             } else
                 Tools.showToast(getApplicationContext(), "Init Camera successful");
-                /**/
         }
-
     }
 
     private void getBattery()//初始化电池
@@ -216,7 +207,13 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
-
+    private void getRemoteController()
+    {
+        if(AutoflyApplication.getHandHeldInstance()!=null){
+            if(remote==null)
+                remote=AutoflyApplication.getAircraftInstance().getRemoteController();
+        }
+    }
     private void getFlightController()//初始化飞控
     {
         if (AutoflyApplication.getAircraftInstance() != null) {
@@ -287,8 +284,12 @@ public class MainActivity extends AppCompatActivity
         mStateFrg=new StateFrg();
         mPositionFrg=new PositionFrg();
         getFragmentManager().beginTransaction().add(R.id.state_frg,mStateFrg,"state_frg").add(R.id.position_frg,mPositionFrg,"position_frg").commit();
-        if(mCM==null)
-            mCM = new CustomMission(log);
+        mMissionFrg=new MissionFrg();
+
+        if(mCM==null) {
+            mCM = new CustomMission();
+            mCM.setOnNewPictureListener(this);
+        }
 
     }
 
@@ -428,69 +429,6 @@ public class MainActivity extends AppCompatActivity
 
 
     @Override
-    public boolean onLongClick(View v) {
-        switch (v.getId()) {
-            case R.id.start_bt: {
-                if (mMissonManager == null) {
-                    log.i("MissionManager Not OK");
-                } else {
-                    mMissonManager.stopMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError == null) {
-                                log.i("Mission stop");
-                            } else {
-                                log.i("Mission Stop Fail:" + djiError.getDescription());
-
-                            }
-                        }
-                    });
-                }
-            }
-            ;
-            break;
-            case R.id.pause_bt: {
-                if (mMissonManager == null) {
-                    Tools.i(getApplicationContext(), "MissionManager Not OK");
-                } else {
-                    mMissonManager.resumeMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError == null) {
-                                Tools.i(getApplicationContext(), "Resume Mission");
-                            } else {
-                                Tools.i(getApplicationContext(), "Resume Mission Fail:" + djiError.getDescription());
-                            }
-                        }
-                    });
-                }
-
-            }
-            ;
-            break;
-        }
-        return false;
-    }
-
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        line_space_view.setText(progress + "m");
-    }
-
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-
-    }
-
-    /*
-     * SeekBar开始滚动的回调函数
-     */
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-
-    }
-
-    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.gen_pl_bt:{
@@ -550,7 +488,6 @@ public class MainActivity extends AppCompatActivity
                         }
                     });
                 }
-
             }
             break;
             case R.id.pause_bt: {
@@ -616,5 +553,40 @@ public class MainActivity extends AppCompatActivity
         mWayPoints=mProjectFrg.getProjectInstance().get_wp_file().get_waypoints();
         //mNavHeadFrg.update();
         mMapFrg.setWayPoints(mWayPoints).drawline(true);
+    }
+
+    @Override
+    public void onNewPicture(String pname) {
+        PhotoWayPoint pwp=new PhotoWayPoint();
+        //pwp.addPhoto(pname,(float)flightController.getCompass().getHeading(),flightController.);
+        mProjectFrg.getProjectInstance().get_pwp_file().addPhotoWayPoint(pwp);
+        if(flightController!=null)
+            mStateHandler.setPhotoTakenPosition(flightController.getCurrentState().getAircraftLocation().getCoordinate2D());
+    }
+
+    @Override
+    public void onPrepareMission(int speed,int height,int step) {
+        if(mWayPoints.size()==0)
+        {
+
+        }else {
+            switch (step)
+            {
+                case 0:{
+                    mCM.setWayPoints(mWayPoints);
+                    mCM.fly_speed=speed;
+                    mCM.return_height=height;
+                    mMission = (DJICustomMission) mCM.generateMission();
+                    prepareMissions();
+                }break;
+                case 1:{
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onGoHomeMission() {
+        //mMission=mCM.ge
     }
 }

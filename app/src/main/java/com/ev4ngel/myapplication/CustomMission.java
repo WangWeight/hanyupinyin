@@ -2,8 +2,10 @@ package com.ev4ngel.myapplication;
 
 import android.util.Log;
 
+import com.ev4ngel.autofly_prj.OnNewPictureGenerateListener;
 import com.ev4ngel.autofly_prj.PhotoInfo;
 import com.ev4ngel.autofly_prj.PhotoWayPoint;
+import com.ev4ngel.autofly_prj.WayPoint;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ import dji.sdk.MissionManager.DJICustomMission;
 import dji.sdk.MissionManager.DJIMission;
 import dji.sdk.MissionManager.MissionStep.DJIAircraftYawStep;
 import dji.sdk.MissionManager.MissionStep.DJIGimbalAttitudeStep;
+import dji.sdk.MissionManager.MissionStep.DJIGoHomeStep;
 import dji.sdk.MissionManager.MissionStep.DJIGoToStep;
 import dji.sdk.MissionManager.MissionStep.DJIMissionStep;
 import dji.sdk.MissionManager.MissionStep.DJIShootPhotoStep;
@@ -41,32 +44,29 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
     private DJIFlightController fc=null;
     private DJIMission mMission=null;
     private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> boundary;
-    public ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> wayPoints;
+    public ArrayList<WayPoint> wayPoints;
     //private PhotoWayPointFile mPhotofile;
     private PhotoWayPoint mPhotopoint=null;
+    private OnNewPictureGenerateListener mListener;
 
     public int rotate_speed;
     public int fly_speed;
-    private T log;
-    public CustomMission(T t)
+    public int return_height;
+    public CustomMission()
     {
-        log=t;
-        wayPoints=new ArrayList<>();
-        //mPhotofile=new PhotoWayPointFile("wangwei.txt");
-        rotate_speed=50;
-        fly_speed=10;
     }
-
+    public void setWayPoints(ArrayList<WayPoint> wp)
+    {
+        wayPoints=wp;
+    }
     public DJIMission generateInspireMission()
     {
         ArrayList<DJIMissionStep> steps=new ArrayList<DJIMissionStep>() ;
-        for(int i=0;i<wayPoints.size();i++) {
-            final int ii=i;
-            if(wayPoints.get(ii)!=null) {
-                DJIGoToStep gotoStep = new DJIGoToStep(wayPoints.get(ii).getLatitude(), wayPoints.get(ii).getLongitude(), new GotoCompletionCallback(fc, gimbal, camera, ii % 2, null));
-                steps.add(gotoStep);
-                gotoStep.setFlightSpeed(fly_speed);
-            }
+        for(WayPoint wp:wayPoints)
+        {
+            DJIGoToStep gotoStep = new DJIGoToStep(wp.lat, wp.lng, new GotoCompletionCallback(fc, gimbal, camera, 0 % 2, null));
+            steps.add(gotoStep);
+            gotoStep.setFlightSpeed(fly_speed);
         }
         return new DJICustomMission(steps);
     }
@@ -77,14 +77,11 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
         {
             final int ii=i;
             if(wayPoints.get(ii)!=null) {
-                DJIGoToStep gotoStep = new DJIGoToStep(wayPoints.get(ii).getLatitude(), wayPoints.get(ii).getLongitude(), new DJIBaseComponent.DJICompletionCallback() {
+                DJIGoToStep gotoStep = new DJIGoToStep(wayPoints.get(ii).lat, wayPoints.get(ii).lng, new DJIBaseComponent.DJICompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
                         if(djiError==null) {
                             Log.i("ev4n","Finish step(" + ii + "/" + wayPoints.size() + ")");
-                            //在飞到下一个点后才存储，以防调用onNewMedia有延迟
-                            //mPhotofile.addWayPoint(mPhotopoint);
-                            //mPhotofile.write();
                         }
                         else
                         {
@@ -177,13 +174,6 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
     }
     public DJIMission generateMission()
     {
-        if(camera==null ||gimbal==null||fc==null) {
-            Log.i("ev4n","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-            Log.i("ev4n","null happend");
-        }else
-        {
-            Log.i("ev4n","Init component ok");
-        }
         if(AutoflyApplication.isInspire()) {
             return generateInspireMission();
         }
@@ -192,14 +182,27 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
         }
     }
 
+    public DJIMission generateGoHomeMission(DJIFlightControllerDataType.DJILocationCoordinate2D latlng,int height)
+    {
+        DJIGoHomeStep gohome=new DJIGoHomeStep(null);
+        return null;
+
+    }
+    public void setOnNewPictureListener(OnNewPictureGenerateListener l)
+    {
+        mListener=l;
+    }
+
     @Override
     public void onResult(DJIMedia djiMedia) {
-        if(djiMedia==null)
+        if(djiMedia!=null)
         {
-            DJIGimbal.DJIGimbalAttitude att=gimbal.getAttitudeInDegrees();
-            PhotoInfo pi=new PhotoInfo();
-            pi.Name=djiMedia.getFileName();
-            pi.Pitch=att.pitch;
+            //DJIGimbal.DJIGimbalAttitude att=gimbal.getAttitudeInDegrees();
+            //PhotoInfo pi=new PhotoInfo();
+            //pi.Name=djiMedia.getFileName();
+            //pi.Pitch=att.pitch;
+            mListener.onNewPicture(djiMedia.getFileName());
+            /*
             if(AutoflyApplication.isInspire())
             {
                 pi.Yaw=att.yaw;
@@ -211,6 +214,7 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
             {
                 mPhotopoint.addPhoto(pi);
             }
+            */
         }
     }
 }

@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="unKnown"
+            android:text="未知"
             android:id="@+id/space_tv_id"/>
     </LinearLayout>
 

@@ -6,6 +6,7 @@ import android.os.Message;
 import android.util.Log;
 
 import com.amap.api.maps2d.model.LatLng;
+import com.ev4ngel.myapplication.CalcBox;
 import com.ev4ngel.myapplication.Map;
 import com.ev4ngel.myapplication.MapFrg;
 
@@ -13,6 +14,7 @@ import dji.sdk.Battery.DJIBattery;
 import dji.sdk.Camera.DJICamera;
 import dji.sdk.FlightController.DJIFlightControllerDataType;
 import dji.sdk.FlightController.DJIFlightControllerDelegate;
+import dji.sdk.RemoteController.DJIRemoteController;
 
 /**
  * Created by Administrator on 2016/8/2.
@@ -20,15 +22,27 @@ import dji.sdk.FlightController.DJIFlightControllerDelegate;
 public class StateHandler extends Handler implements
         DJIBattery.DJIBatteryStateUpdateCallback,
         DJICamera.CameraUpdatedSDCardStateCallback,
-        DJIFlightControllerDelegate.FlightControllerUpdateSystemStateCallback
+        DJIFlightControllerDelegate.FlightControllerUpdateSystemStateCallback,
+        DJIRemoteController.RCGpsDataUpdateCallback
 {
+
     StateFrg mSF;
     PositionFrg mPF;
     MapFrg mMap;
+    public LatLng position_aircraft=null;
+    public LatLng position_rc=null;
+    public LatLng position_last_pic=null;
     final int vol_id=0x01;
     final int salt_id=0x02;
     final int space_id=0x03;
-
+    final int rc_id=0x04;
+    public void setPhotoTakenPosition(LatLng l){
+        position_last_pic=l;
+    }
+    public void setPhotoTakenPosition(DJIFlightControllerDataType.DJILocationCoordinate2D p2d)
+    {
+        position_last_pic=new LatLng(p2d.getLatitude(),p2d.getLongitude());
+    }
     public void setPF(PositionFrg PF) {
         mPF = PF;
     }
@@ -52,11 +66,29 @@ public class StateHandler extends Handler implements
             case salt_id:{
                 Bundle b=msg.getData();
                 mPF.set_pos(b.getDouble("lat"), b.getDouble("lng"), b.getDouble("alt"));
+                if(position_aircraft!=null){
+                    if(position_last_pic!=null)
+                    {
+                        mPF.set_last_point_dist(new CalcBox().coorNageCalcDistance(position_aircraft,position_last_pic));
+                    }
+                    if(position_rc!=null)
+                    {
+                        mPF.set_rc_dist(new CalcBox().coorNageCalcDistance(position_aircraft, position_rc));
+                        mPF.set_rc_direction(new CalcBox().coorNageCalcAngle(position_aircraft,position_rc));
+                    }
+                }
                 mSF.setSalt_tv_text(b.getDouble("sat_num"));
                 mMap.updatePlane(new LatLng(b.getDouble("lat"),b.getDouble("lng")),b.getInt("heading"));
             }break;
             case space_id:{
                 mSF.setSpace_tv_text(msg.getData().getString("text"));
+            }break;
+            case rc_id:{
+                if(position_aircraft!=null && position_rc!=null)
+                {
+                    mPF.set_rc_dist(new CalcBox().coorNageCalcDistance(position_aircraft, position_rc));
+                    mPF.set_rc_direction(new CalcBox().coorNageCalcAngle(position_aircraft,position_rc));
+                }
             }break;
         }
     }
@@ -84,14 +116,27 @@ public class StateHandler extends Handler implements
     public void onResult(DJIFlightControllerDataType.DJIFlightControllerCurrentState djiFlightControllerCurrentState) {
         DJIFlightControllerDataType.DJILocationCoordinate3D tmp=djiFlightControllerCurrentState.getAircraftLocation();
         Message m=new Message();
-        Bundle b=new Bundle();
-        b.putDouble("lat",tmp.getLatitude());
+        Bundle b = new Bundle();
+        b.putDouble("lat", tmp.getLatitude());
         b.putDouble("lng", tmp.getLongitude());
         b.putFloat("alt", tmp.getAltitude());
         b.putInt("heading", djiFlightControllerCurrentState.getAircraftHeadDirection());
         b.putDouble("sat_num", djiFlightControllerCurrentState.getSatelliteCount());
         m.setData(b);
         m.what=salt_id;
+        //position_aircraft=new LatLng(tmp.getLatitude(),tmp.getLongitude());
+        this.sendMessage(m);
+    }
+
+    @Override
+    public void onGpsDataUpdate(DJIRemoteController djiRemoteController, DJIRemoteController.DJIRCGPSData djircgpsData) {
+        Message m=new Message();
+        Bundle b=new Bundle();
+        b.putDouble("lat",djircgpsData.latitude);
+        b.putDouble("lng", djircgpsData.longitude);
+        m.setData(b);
+        m.what=rc_id;
+        position_rc=new LatLng(djircgpsData.latitude,djircgpsData.longitude);
         this.sendMessage(m);
     }
 }
