@@ -33,22 +33,29 @@ public class PositionFrg extends Fragment {
         rc_direction_tv=(TextView)v.findViewById(R.id.rc_direction_tv_id);
         return v;
     }
-    public void set_pos(double lat,double lng,double alt)
+    public void set_pos(double lat,double lng,float alt)
     {
-        if(lat_tv!=null) lat_tv.setText(""+lat);
-        if(lng_tv!=null) lng_tv.setText(""+lng);
-        if(alt_tv!=null) alt_tv.setText(""+alt);
+        String lat_str="未定位";
+        String lng_str="未定位";
+        if(!Double.isNaN(lat)&& !Double.isNaN(lng))
+        {
+            lat_str=String.format("%.6f",lat)+"N";
+            lng_str=String.format("%.6f",lng)+"E";
+        }
+        if(lat_tv!=null) lat_tv.setText(lat_str);
+        if(lng_tv!=null) lng_tv.setText(lng_str);
+        if(alt_tv!=null) alt_tv.setText(""+alt+"m");
     }
     public void set_last_point_dist(double dist)
     {
-        if(last_pt_dist_tv!=null) last_pt_dist_tv.setText(dist+"m");
+        if(last_pt_dist_tv!=null) last_pt_dist_tv.setText(String.format("%.2f",dist)+"m");
     }
     public void set_rc_dist(double dist){
-        if(rc_dist_tv!=null) rc_dist_tv.setText(dist+"m");
+        if(rc_dist_tv!=null) rc_dist_tv.setText(String.format("%.2f",dist)+"m");
     }
     public void set_rc_direction(double dist){
         String value="";
-        if(rc_direction_tv!=null) rc_direction_tv.setText(dist+"度");
+        if(rc_direction_tv!=null) rc_direction_tv.setText(String.format("%.1f",dist)+"度");
     }
 
 }

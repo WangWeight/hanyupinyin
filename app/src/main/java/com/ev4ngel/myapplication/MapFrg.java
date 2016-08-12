@@ -65,7 +65,7 @@ public class MapFrg extends Fragment implements
     MTBSelectWidthFragment selectWidthFrg = null;
     MTBDesignFragment designFrg=null;
     MTBClearFragment clearFrg=null;
-
+    LatLng defalut_latlng;
     int mMapOptStatus = MapOperationStatus.Design;//右侧按钮点击状态
     ArrayList<Fragment> sub_fragments;
     FloatingActionButton fab_set;
@@ -106,8 +106,10 @@ public class MapFrg extends Fragment implements
     public void updatePlane(LatLng pos,float angle)
     {
         LatLng tmp=MapFrg.fromGPSToMar(pos);
+        if(mPlane==null)
+            mPlane=mMap.addMarker(init_plane(null));
         mPlane.setPosition(tmp);
-        mPlane.setRotateAngle(angle);
+        mPlane.setRotateAngle(angle * (-1));
         if(!isLocating)
             moveTo(tmp);
         isLocating=true;
@@ -119,8 +121,7 @@ public class MapFrg extends Fragment implements
         if (startPoint == null)
             startPoint = mArea.area_points.get(0);
         if (mWayPoints_string.size() > 0) {
-            mMap.clear();
-
+            clear();
         }
         mWayPoints_latlng = cb.calcNearestPlanPointList(mArea.area_points.get(0),
                 mArea.area_points.get(1),
@@ -137,9 +138,9 @@ public class MapFrg extends Fragment implements
     }
     private  void _draw_line(final boolean isPointsReady)
     {
-        new Handler(AutoflyApplication.getContext().getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
+        //new Handler(AutoflyApplication.getContext().getMainLooper()).post(new Runnable() {
+         //   @Override
+         //   public void run() {
                 if (!isPointsReady)
                     cal_waypoints();
                 for (WayPoint loc : mWayPoints) {
@@ -155,8 +156,8 @@ public class MapFrg extends Fragment implements
                     mLine.setWidth(1);
                 }
                 mLine.setPoints(mWayPoints_latlng);//I should convert DJICoordinate2D to LatLng type,boring
-            }
-        });
+         //   }
+        //});
     }
     public void drawline(boolean isPointsReady)//若isPointsReady,不会调用计算的方法，否则会根据mArea的点重新计算
     {
@@ -194,11 +195,22 @@ public class MapFrg extends Fragment implements
     {
         makeMarkerFromWaypoint(mWayPoints.get(id)).setIcon(BitmapDescriptorFactory.defaultMarker(status));;
     }
-    private MarkerOptions init_plane()
+    public void clear(){
+        LatLng plane_latlng=defalut_latlng;
+        if(mPlane!=null)
+            plane_latlng=mPlane.getPosition();
+        mMap.clear();
+        mArea.clear();
+        mPlane=mMap.addMarker(init_plane(plane_latlng));
+    }
+    private MarkerOptions init_plane(LatLng pos)
     {
-        MarkerOptions mo=new MarkerOptions();
-        mo.icon(BitmapDescriptorFactory.fromResource(android.R.drawable.arrow_up_float));
-        mo.anchor(0, 0);
+        if(pos==null)
+            pos=defalut_latlng;
+        MarkerOptions mo = new MarkerOptions();
+        mo.icon(BitmapDescriptorFactory.fromResource(R.drawable.plane));
+        mo.anchor(0.5f, 0.5f);
+        mo.position(pos);
         return mo;
     }
     private MarkerOptions init_waypoint_status(float wps)
@@ -262,11 +274,9 @@ public class MapFrg extends Fragment implements
         mMap.setOnMarkerClickListener(this);
         UiSettings us=mMap.getUiSettings();
         us.setCompassEnabled(true);
-        us.setMyLocationButtonEnabled(true);
+        //us.setMyLocationButtonEnabled(true);
         us.setScaleControlsEnabled(true);
         us.setZoomPosition(2);
-
-        mPlane=mMap.addMarker(init_plane());
         mArea=new WayPointArea();
         setWayPoints(new ArrayList<WayPoint>());
         //mWayPoints=new ArrayList<>();
@@ -277,15 +287,16 @@ public class MapFrg extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View map_view= inflater.inflate(R.layout.imap_layout,container,false);
+        defalut_latlng=new LatLng(42,123);
         mMapView=(MapView)map_view.findViewById(R.id.imap_id);
         init_buttons(map_view);
         return map_view;
     }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
         mMapView.onDestroy();
+
     }
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -306,8 +317,7 @@ public class MapFrg extends Fragment implements
         if(mm==MapMode.Design) {
             if (mMapOptStatus == MapOperationStatus.Design) {
                 if (mArea.getCount() > 3) {
-                    mArea.clear();
-                    mMap.clear();
+                    clear();
                     setWayPoints(new ArrayList<WayPoint>());
                     //mWayPoints = new ArrayList<>();
                     //mWayPoints_latlng = new ArrayList<>();
@@ -366,14 +376,20 @@ public class MapFrg extends Fragment implements
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-    }
-
-    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         mMapView.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onDestroyView() {
+        try {
+            getFragmentManager().beginTransaction().remove(selectWidthFrg).remove(designFrg).remove(clearFrg).commit();
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        super.onDestroyView();
     }
 
     @Override
@@ -476,8 +492,7 @@ public class MapFrg extends Fragment implements
     public void onClick(View v) {
        if(v.getId()==R.id.clear_map_bt)
        {
-           mMap.clear();
-           mArea.clear();
+           clear();
        }
     }
     @Override
@@ -522,13 +537,7 @@ public class MapFrg extends Fragment implements
             mWayPoints_marker=new ArrayList<>();
         if(mWayPoints_latlng==null||mWayPoints_latlng.size()!=0)
             mWayPoints_latlng=new ArrayList<>();
-        /*for(WayPoint wp:aaa) {
-            Marker m = mMap.addMarker(init_waypoint_status(wp.status));
-            m.setPosition(MapFrg.fromGPSToMar(wp.toLatLng()));
-            mWayPoints_string.add(m.getId());
-            mWayPoints_latlng.add(wp.toLatLng());
-        }*/
-        //drawline();
+
         return this;
     }
 

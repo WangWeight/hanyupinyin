@@ -78,5 +78,4 @@ public class WayPointArea {
         }
         area_side=new ArrayList<>();
     }
-
 }

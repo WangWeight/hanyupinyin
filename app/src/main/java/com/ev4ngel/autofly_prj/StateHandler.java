@@ -7,13 +7,13 @@ import android.util.Log;
 
 import com.amap.api.maps2d.model.LatLng;
 import com.ev4ngel.myapplication.CalcBox;
-import com.ev4ngel.myapplication.Map;
 import com.ev4ngel.myapplication.MapFrg;
 
 import dji.sdk.Battery.DJIBattery;
 import dji.sdk.Camera.DJICamera;
 import dji.sdk.FlightController.DJIFlightControllerDataType;
 import dji.sdk.FlightController.DJIFlightControllerDelegate;
+import dji.sdk.Gimbal.DJIGimbal;
 import dji.sdk.RemoteController.DJIRemoteController;
 
 /**
@@ -23,7 +23,9 @@ public class StateHandler extends Handler implements
         DJIBattery.DJIBatteryStateUpdateCallback,
         DJICamera.CameraUpdatedSDCardStateCallback,
         DJIFlightControllerDelegate.FlightControllerUpdateSystemStateCallback,
-        DJIRemoteController.RCGpsDataUpdateCallback
+        DJIRemoteController.RCGpsDataUpdateCallback,
+        DJIGimbal.GimbalAdvancedSettingsStateUpdateCallback,
+        DJIGimbal.GimbalStateUpdateCallback
 {
 
     StateFrg mSF;
@@ -32,6 +34,7 @@ public class StateHandler extends Handler implements
     public LatLng position_aircraft=null;
     public LatLng position_rc=null;
     public LatLng position_last_pic=null;
+    int heading=0;
     final int vol_id=0x01;
     final int salt_id=0x02;
     final int space_id=0x03;
@@ -57,7 +60,6 @@ public class StateHandler extends Handler implements
 
     @Override
     public void handleMessage(Message msg) {
-        Log.i("E", "xxxxxx" + msg.what);
         switch (msg.what)
         {
             case vol_id:{
@@ -65,14 +67,14 @@ public class StateHandler extends Handler implements
             }break;
             case salt_id:{
                 Bundle b=msg.getData();
-                mPF.set_pos(b.getDouble("lat"), b.getDouble("lng"), b.getDouble("alt"));
-                Log.i("handle",b.toString());
+                mPF.set_pos(b.getDouble("lat"), b.getDouble("lng"), b.getFloat("alt"));
+                position_aircraft=new LatLng(b.getDouble("lat"), b.getDouble("lng"));
                 if(position_aircraft!=null){
-                    Log.i("e","posicraft"+(position_aircraft==null));
                     if(position_last_pic!=null)
                     {
-                        Log.i("e","last_pic"+(position_last_pic==null));
+                        Log.i("e", "last_pic" + (position_last_pic == null));
                         mPF.set_last_point_dist(new CalcBox().coorNageCalcDistance(position_aircraft,position_last_pic));
+                        int a=0;
                     }
                     if(position_rc!=null)
                     {
@@ -124,6 +126,7 @@ public class StateHandler extends Handler implements
         b.putDouble("lng", tmp.getLongitude());
         b.putFloat("alt", tmp.getAltitude());
         b.putInt("heading", djiFlightControllerCurrentState.getAircraftHeadDirection());
+        heading=djiFlightControllerCurrentState.getAircraftHeadDirection();
         b.putDouble("sat_num", djiFlightControllerCurrentState.getSatelliteCount());
         m.setData(b);
         m.what=salt_id;
@@ -139,7 +142,19 @@ public class StateHandler extends Handler implements
         b.putDouble("lng", djircgpsData.longitude);
         m.setData(b);
         m.what=rc_id;
+        Log.i("e", djircgpsData.latitude + ";" + djircgpsData.longitude);
         position_rc=new LatLng(djircgpsData.latitude,djircgpsData.longitude);
         this.sendMessage(m);
+    }
+
+    @Override
+    public void onGimbalAdvancedSettingsStateUpdate(DJIGimbal djiGimbal, DJIGimbal.DJIGimbalAdvancedSettingsState djiGimbalAdvancedSettingsState) {
+
+    }
+
+    @Override
+    public void onGimbalStateUpdate(DJIGimbal djiGimbal, DJIGimbal.DJIGimbalState djiGimbalState) {
+        DJIGimbal.DJIGimbalAttitude i= djiGimbalState.getAttitudeInDegrees();
+        Log.i("gimbal","P:"+i.pitch+"/R:"+i.roll+"/Y:"+i.yaw+"/"+djiGimbalState.getRollFineTuneInDegrees()+"/delta:"+(i.yaw-heading) );
     }
 }

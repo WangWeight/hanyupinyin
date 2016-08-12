@@ -62,17 +62,32 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
     public DJIMission generateInspireMission()
     {
         ArrayList<DJIMissionStep> steps=new ArrayList<DJIMissionStep>() ;
+        int ct=0;
         for(WayPoint wp:wayPoints)
         {
-            DJIGoToStep gotoStep = new DJIGoToStep(wp.lat, wp.lng, new GotoCompletionCallback(fc, gimbal, camera, 0 % 2, null));
+            DJIGoToStep gotoStep = new DJIGoToStep(wp.lat, wp.lng, new GotoCompletionCallback(fc, gimbal, camera, ct % 2, null));
             steps.add(gotoStep);
             gotoStep.setFlightSpeed(fly_speed);
+            ct++;
         }
         return new DJICustomMission(steps);
     }
     public DJIMission generatePhantomMission()
     {
+
         ArrayList<DJIMissionStep> steps=new ArrayList<DJIMissionStep>() ;
+        for(WayPoint wp:wayPoints)
+        {
+            final WayPoint wwp=wp;
+            DJIGoToStep goToStep=new DJIGoToStep(wwp.lat, wwp.lng, new DJIBaseComponent.DJICompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    Log.i("E","@"+wwp.lat+","+wwp.lng);
+                }
+            });
+            steps.add(goToStep);
+        }
+        return new DJICustomMission(steps);/*
         for(int i=0;i<wayPoints.size();i++)
         {
             final int ii=i;
@@ -165,6 +180,7 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
             }
         }
         return new DJICustomMission(steps);
+        */
     }
     public  void initComponet(DJIFlightController _fc, DJIGimbal _g,DJICamera _c)
     {

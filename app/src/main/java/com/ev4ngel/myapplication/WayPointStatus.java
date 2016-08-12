@@ -12,7 +12,6 @@ public class WayPointStatus {
     public static float Wait=BitmapDescriptorFactory.HUE_RED;
     public static float Dealing=BitmapDescriptorFactory.HUE_YELLOW;
     public static float Done= BitmapDescriptorFactory.HUE_GREEN;
-
     public static float Side=BitmapDescriptorFactory.HUE_VIOLET;
 
     public static BitmapDescriptor BeWait()

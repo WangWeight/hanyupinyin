@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -18,7 +19,9 @@ import com.ev4ngel.autofly_prj.OnPrepareMissionListener;
 /**
  * Created by Administrator on 2016/8/9.
  */
-public class MissionFrg extends Fragment implements View.OnClickListener,DialogInterface.OnClickListener,SeekBar.OnSeekBarChangeListener {
+public class MissionFrg extends Fragment implements DialogInterface.OnClickListener,
+        SeekBar.OnSeekBarChangeListener ,
+        CompoundButton.OnCheckedChangeListener{
     OnPrepareMissionListener mListener;
     SeekBar fly_speed_sb;
     SeekBar rotate_speed_sb;
@@ -59,8 +62,9 @@ public class MissionFrg extends Fragment implements View.OnClickListener,DialogI
 
     public void init_listeners()
     {
-        gohome_opt_tb.setOnClickListener(this);
-        mission_opt_tb.setOnClickListener(this);
+        //gohome_opt_tb.setOnClickListener(this);
+        //mission_opt_tb.setOnClickListener(this);
+        mission_opt_tb.setOnCheckedChangeListener(this);
     }
     public void setFly_speed(float value)
     {
@@ -74,17 +78,16 @@ public class MissionFrg extends Fragment implements View.OnClickListener,DialogI
     }
 
     @Override
-    public void onClick(View v) {
-        if(v.getId()==gohome_opt_tb.getId())
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        if(buttonView.getId()==mission_opt_tb.getId())
         {
-
-        }else{
-            if(v.getId()==mission_opt_tb.getId()){
-                if(mission_opt_tb.isChecked()){
-                    ask_dialog.show();
-                }else{
-                    mListener.onPrepareMission(0,0,2);
-                }
+            //if(!buttonView.isPressed()) return;
+            if(isChecked)
+            {
+                ask_dialog.show();
+            }else{
+            //stop mission here
+                mListener.onPrepareMission(0,0,MissionOptSignal.MOS_STOP);
             }
         }
     }
@@ -94,7 +97,9 @@ public class MissionFrg extends Fragment implements View.OnClickListener,DialogI
         if(dialog!=null && dialog.toString().equals(ask_dialog.toString()))
         {
             if(which==DialogInterface.BUTTON_POSITIVE){
-                mListener.onPrepareMission(fly_speed_sb.getProgress(),return_height_sb.getProgress(),0);
+                mListener.onPrepareMission(fly_speed_sb.getProgress(),return_height_sb.getProgress(),MissionOptSignal.MOS_PREPARE);
+
+                mission_opt_tb.setChecked(true);
             }else{
                 mission_opt_tb.setChecked(false);
             }

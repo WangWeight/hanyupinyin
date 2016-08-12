@@ -68,6 +68,8 @@ import dji.sdk.SDKManager.DJISDKManager;
 import dji.sdk.base.DJIBaseComponent;
 import dji.sdk.base.DJIBaseProduct;
 import dji.sdk.base.DJIError;
+import dji.sdk.util.DJIParamCapability;
+import dji.sdk.util.DJIParamMinMaxCapability;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -140,13 +142,16 @@ public class MainActivity extends AppCompatActivity
         mStateHandler.setMap(mMapFrg);
         if(battery!=null)
         battery.setBatteryStateUpdateCallback(mStateHandler);
-        //camera.setDJICameraGeneratedNewMediaFileCallback(mCM);
+        camera.setDJICameraGeneratedNewMediaFileCallback(mCM);
         if(camera!=null)
         camera.setDJIUpdateCameraSDCardStateCallBack(mStateHandler);
         if(flightController!=null)
         flightController.setUpdateSystemStateCallback(mStateHandler);
         if(remote!=null)
         remote.setGpsDataUpdateCallback(mStateHandler);
+        if(gimbal!=null)
+            gimbal.setGimbalStateUpdateCallback(mStateHandler);
+        else Log.i("e","Remote is null");
     }
 
 
@@ -170,6 +175,8 @@ public class MainActivity extends AppCompatActivity
     {
         if (AutoflyApplication.isAircraftConnected() && gimbal == null) {
             gimbal = getProduct().getGimbal();
+
+            gimbal.setCompletionTimeForControlAngleAction(1);
             /*
             if (gimbal == null) {
                 Tools.showToast(getApplicationContext(), "Init Gimbal Fail");
@@ -232,7 +239,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void prepareMissions() {
-        if (mMissonManager != null && mMission != null)
+        if (mMissonManager != null && mMission != null) {
             mMissonManager.prepareMission(mMission, new DJIMission.DJIMissionProgressHandler() {
                 @Override
                 public void onProgress(DJIMission.DJIProgressType djiProgressType, float v) {
@@ -243,11 +250,15 @@ public class MainActivity extends AppCompatActivity
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
                         log.i("Prepare mission OK");
+                        onPrepareMission(0,0,MissionOptSignal.MOS_START);
                     } else {
                         log.i("Prepare mission fail on result");
                     }
                 }
             });
+        }else{
+
+        }
     }
 
     private void resetCameraPosition() {
@@ -269,10 +280,6 @@ public class MainActivity extends AppCompatActivity
 
     private void initUi() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-         //gimbalFab.setBackgroundColor(getResources().getColor(R.color.fad_invalid,getTheme()));
-
-        //mMap=new Map((MapView)findViewById(R.id.map_view));
-
     }
 
     private void initParams() {
@@ -436,105 +443,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.gen_pl_bt:{
-                if (mMissonManager == null) {
-                    Tools.i(getApplicationContext(), "MissionManager Not OK");
-                } else {
-
-                }
-            }break;
-            case R.id.prepare_bt: {
-                if (mMissonManager == null) {
-                    Tools.i(getApplicationContext(), "MissionManager Not OK");
-                } else {
-                    getCamera();
-                    if (mMissonManager.mIsCustomMissionExecuting)
-                        mMissonManager.stopMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                if (djiError != null) {
-                                    log.i("StopMissionFail");
-                                }
-                            }
-                        });
-                    /*
-                    mCM.initBoundary(boundary);
-                    mCM.generateCoordinates(line_width);
-                    mCM.rotate_speed = rotate_speed;
-                    mCM.fly_speed = fly_speed;
-                    */
-                    mMission = (DJICustomMission) mCM.generateMission();
-                    prepareMissions();
-                }
-            }
-            break;
-            case R.id.start_bt: {
-                if (mMissonManager == null) {
-                    Tools.i(getApplicationContext(), "MissionManager Not OK");
-                } else {
-                    Tools.i(getApplicationContext(), "Starting Mission...");
-                    mMissonManager.setMissionExecutionFinishedCallback(new DJIBaseComponent.DJICompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError == null) {
-                                log.i("Finish");
-                            }
-                        }
-                    });
-                    mMissonManager.startMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError == null) {
-                                Tools.i(getApplicationContext(), "Start mission");
-                            } else {
-                                Tools.i(getApplicationContext(), "Start Mission Fail:" + djiError.getDescription());
-                            }
-
-                        }
-                    });
-                }
-            }
-            break;
-            case R.id.pause_bt: {
-                if (mMissonManager == null) {
-                    Tools.i(getApplicationContext(), "MissionManager Not OK");
-                } else {
-
-                    mMissonManager.pauseMissionExecution(new DJIBaseComponent.DJICompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError == null) {
-                                Tools.i(getApplicationContext(), "Pause Mission");
-                            } else {
-                                Tools.i(getApplicationContext(), "Pause Mission Fail");
-                            }
-                        }
-                    });
-                }
-
-            }
-            break;
-
-            case R.id.show_pl_bt:{
-                if(mCM.wayPoints.size()>0) {
-                    //mMap.drawWaypoints(mCM.wayPoints,getApplicationContext());
-                }
-                else {
-                    log.i("No waypoints");
-                }
-            }
-            break;
-            case R.id.clear_pl_bt:{
-                //mMap.clearMap();
-            }break;
-
         }
     }
     public void onLoadProject()
     {
         TextView tv1=((TextView) findViewById(R.id.nav_prj_name));
         if(tv1!=null)
-            tv1.setText("当前项目" + mProjectFrg.getProjectInstance().current_project_name);
+            tv1.setText("当前项目:" + mProjectFrg.getProjectInstance().current_project_name);
         TextView tv2=((TextView)findViewById(R.id.nav_prj_detail));
         if(tv2!=null)
             tv2.setText(mProjectFrg.getProjectInstance().current_project_name);
@@ -563,32 +478,48 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onNewPicture(String pname) {
         PhotoWayPoint pwp=new PhotoWayPoint();
-        //pwp.addPhoto(pname,(float)flightController.getCompass().getHeading(),flightController.);
-        mProjectFrg.getProjectInstance().get_pwp_file().addPhotoWayPoint(pwp);
-        Log.i("e",pname);
+        //pwp.addPhoto(pname,(float)flightController.getCompass().getHeading(),flightController);
+        //mProjectFrg.getProjectInstance().get_pwp_file().addPhotoWayPoint(pwp);
+
         if(flightController!=null) {
-            Log.i("E","in fliaht"+flightController.getCurrentState().getAircraftLocation().getCoordinate2D().toString());
             mStateHandler.setPhotoTakenPosition(flightController.getCurrentState().getAircraftLocation().getCoordinate2D());
         }
     }
 
     @Override
-    public void onPrepareMission(int speed,int height,int step) {
-        if(mWayPoints.size()==0)
+    public void onPrepareMission(int speed,int height,int signal) {
+        if(mWayPoints==null ||mWayPoints.size()==0)
         {
-
+            Toast.makeText(MainActivity.this, "请先规划或者选择航线", Toast.LENGTH_SHORT).show();
         }else {
-            switch (step)
+            switch (signal)
             {
-                case 0:{
+                case MissionOptSignal.MOS_PREPARE:{
                     mCM.setWayPoints(mWayPoints);
                     mCM.fly_speed=speed;
                     mCM.return_height=height;
                     mMission = (DJICustomMission) mCM.generateMission();
                     prepareMissions();
                 }break;
-                case 1:{
-                }
+                case MissionOptSignal.MOS_START:{
+                    //resetCameraPosition();
+                    gimbal.resetGimbal(new DJIBaseComponent.DJICompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            if (djiError == null) {
+                                resetCameraPosition();
+                                if (mMissonManager.isMissionReadyToExecute)
+                                    mMissonManager.startMissionExecution(null);
+                                else
+                                    Log.i("e","Not ready to start");
+                            }
+                        }
+                    });
+                }break;
+                case MissionOptSignal.MOS_STOP:{
+                    if(mMissonManager.mIsCustomMissionExecuting)
+                        mMissonManager.stopMissionExecution(null);
+                }break;
             }
         }
     }

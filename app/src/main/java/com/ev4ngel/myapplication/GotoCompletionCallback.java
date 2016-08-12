@@ -2,6 +2,7 @@ package com.ev4ngel.myapplication;
 
 import android.content.Context;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.ev4ngel.autofly_prj.PhotoInfo;
@@ -27,14 +28,14 @@ import dji.sdk.base.DJIError;
  * 下一点顺序为：左-后-右-前-下，逆时针
  * 同时记录当前姿态信息给文件
  */
-public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCallback,DJICamera.CameraGeneratedNewMediaFileCallback{
+public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCallback{
     private DJIGimbal mGimbal;
     private DJICamera mCamera;
     private Context mContext;
     private PhotoWayPointFile mFile;
     private PhotoWayPoint pwPoint;
     private DJIFlightController mFC;
-    private int mDirection=1;//旋转方向，0为逆时针，1为顺时针
+    private int mDirection=1;//旋转方向，1为逆时针，0为顺时针
     public GotoCompletionCallback(DJIFlightController fcontrol, DJIGimbal gimbal,DJICamera camera,int direction,PhotoWayPointFile f)
     {
         pwPoint=new PhotoWayPoint();
@@ -57,22 +58,35 @@ public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCal
 
             }
             */
-            pwPoint.startTime=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-            pwPoint.heading= mFC.getCompass().getHeading();
+            //pwPoint.startTime=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            //pwPoint.heading= mFC.getCompass().getHeading();
             DJIGimbal.DJIGimbalRotateDirection direction=(mDirection==0)? DJIGimbal.DJIGimbalRotateDirection.Clockwise: DJIGimbal.DJIGimbalRotateDirection.CounterClockwise;
             DJIGimbal.DJIGimbalAngleRotation
                     mPitchRotation=new DJIGimbal.DJIGimbalAngleRotation(true,0,direction),
                     mRollRotation=new DJIGimbal.DJIGimbalAngleRotation(true,0,direction),
                     mYawRotation=new DJIGimbal.DJIGimbalAngleRotation(true,0,direction);
             for(int i=0;i<5;i++) {
-                if(i==0)//第一个位置不转相机
-                {
-                    mYawRotation.angle = 0;
-                    mPitchRotation.angle = 0;
-                    mRollRotation.angle = 0;
+                if(i==0){//第一个位置不转相机
+                    if (mCamera != null) {
+                        mCamera.startShootPhoto(
+                                DJICameraSettingsDef.CameraShootPhotoMode.Single,
+                                new DJIBaseComponent.DJICompletionCallback() {
+                                    @Override
+                                    public void onResult(DJIError djiError) {
+                                        if (null == djiError)
+                                            Log.i("e", "PhotoSuccess");
+                                        else
+                                            Log.i("e", djiError.getDescription());
+                                    }
+                                }
+                        );
+                    }
+                    //mYawRotation.angle = 0;
+                    //mPitchRotation.angle = 0;
+                    //mRollRotation.angle = 0;
                 }else {
                     if (mDirection == 0) {
-                        if (i == 1)//当顺时针时第二张需要抬头45度
+                        if (i == 1)//当shun时针时第二张需要抬头45度
                         {
                             mPitchRotation.angle = Common.camPitchDeltaAngle;
                             mYawRotation.angle = 0;
@@ -81,9 +95,9 @@ public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCal
                             mYawRotation.angle=Common.camYawDeltaAngle;
                         }
                     } else {
-                        if(i == 4)//逆时针时低头45度
+                        if(i == 4)//ni时针时低头45度
                         {
-                            mPitchRotation.angle =Common.camYawDeltaAngle;
+                            mPitchRotation.angle =Common.camPitchDeltaAngle;
                             mYawRotation.angle = 0;
                         }else
                         {
@@ -104,9 +118,9 @@ public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCal
                                             @Override
                                             public void onResult(DJIError djiError) {
                                                 if (null == djiError)
-                                                    Toast.makeText(mContext, "PhotoSuccess", Toast.LENGTH_SHORT).show();
+                                                    Log.i("e", "PhotoSuccess");
                                                 else
-                                                    Toast.makeText(mContext, djiError.getDescription(), Toast.LENGTH_SHORT).show();
+                                                    Log.i("e", djiError.getDescription());
                                             }
                                         }
                                 );
@@ -116,20 +130,21 @@ public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCal
                         }
                     }
                 });
+
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            pwPoint.stopTime=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            //pwPoint.stopTime=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         }
     }
 
-    @Override
-    public void onResult(DJIMedia djiMedia) {
-        DJIGimbal.DJIGimbalAttitude att=mGimbal.getAttitudeInDegrees();
-        pwPoint.addPhoto(new PhotoInfo(djiMedia.getFileName(),att.yaw,att.pitch));
+    //@Override
+    //public void onResult(DJIMedia djiMedia) {
+        //DJIGimbal.DJIGimbalAttitude att=mGimbal.getAttitudeInDegrees();
+        //pwPoint.addPhoto(new PhotoInfo(djiMedia.getFileName(),att.yaw,att.pitch));
         //mFile.write();
-    }
+    //}
 }
