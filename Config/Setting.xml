@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Lemonade系统环境配置 -->
+<configuration>
+  <LabelText>
+    <WelcomeTitle>lemon</WelcomeTitle>
+    <WelcomeHalfTitle></WelcomeHalfTitle>
+  </LabelText>
+  <!--模块配置-->
+  <Module>
+    <!--系统启动后首先加载的模块--> 
+    <BeginModules>  
+      <FullClassName>Traffic.Console.Layout.StreetViewMode</FullClassName>
+      <FullClassName>Traffic.Console.WorkSpace.RemindCloseWorkspace</FullClassName>
+      <FullClassName>Traffic.MapPanel.OpenMapForm</FullClassName>
+      <FullClassName>Traffic.StreetView.OpenStreetViewFrm</FullClassName>
+	  <FullClassName>Traffic.StreetView.StreetViewInit</FullClassName> 
+      <FullClassName>Traffic.StreetViewMapSync.OpenSync</FullClassName>
+      <FullClassName>Traffic.Console.Sys.SystemCloseSaveSetting</FullClassName>
+      <FullClassName>Traffic.StreetViewMapSync.Toolbar.PathSelect</FullClassName>
+	  <FullClassName>Lemonade.StatusBox.FrmStatusBox</FullClassName>   
+    </BeginModules>
+  </Module>
+  <!--系统启动前置处理程序,在主窗体启动前运行的程序 -->
+  <Prepose>  
+    <!--打开交通业务工作空间-->
+    <App AppName="OpenTrafficWorkSpace"> 
+      <FullClassName>Traffic.Console.WorkSpace.OpenTrafficWorkSpace</FullClassName> 
+    </App> 
+  </Prepose> 
+</configuration>

@@ -1,9 +1,5 @@
 package com.ev4ngel.myapplication;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.SimpleFormatter;
-
 /**
  * Created by Administrator on 2016/7/5.
  */

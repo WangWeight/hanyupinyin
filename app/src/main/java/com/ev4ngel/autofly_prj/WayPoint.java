@@ -1,6 +1,6 @@
 package com.ev4ngel.autofly_prj;
+
 import com.amap.api.maps2d.model.LatLng;
-import com.ev4ngel.autofly_prj.IJson;
 
 import org.json.JSONException;
 import org.json.JSONObject;

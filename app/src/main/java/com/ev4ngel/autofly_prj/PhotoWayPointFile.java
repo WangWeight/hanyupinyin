@@ -1,18 +1,10 @@
 package com.ev4ngel.autofly_prj;
 
-import android.content.Context;
-import android.util.Log;
-import android.widget.Toast;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import org.json.*;
-import java.io.File;
-
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.PriorityQueue;
 
 /**
  * Created by Administrator on 2016/7/1.

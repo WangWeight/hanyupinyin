@@ -2,13 +2,10 @@ package com.ev4ngel.autofly_prj;
 
 import android.app.AlertDialog;
 import android.app.Fragment;
-import android.app.ListFragment;
 import android.content.DialogInterface;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,13 +14,13 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.ev4ngel.myapplication.AutoflyApplication;
 import com.ev4ngel.myapplication.R;
 
-import java.util.zip.DeflaterInputStream;
+import java.util.ArrayList;
 
 
 /**
@@ -34,18 +31,19 @@ public class ProjectFragment extends Fragment implements
         DialogInterface.OnClickListener,
         ListView.OnItemClickListener,
         ListView.OnItemLongClickListener
-        {
-            String E="evan";
-            FloatingActionButton Prj_add;
-            EditText prjEt;//init in onClick
-            TextView prjTv;
-            Project mPrj;
+{
+    String E="evan";
+    FloatingActionButton Prj_add;
+    EditText prjEt;//init in onClick
+    TextView prjTv;
+    Project mPrj;
             ListView mLv;
             ArrayAdapter _aa;
             AlertDialog new_prj_ad;
             AlertDialog del_prj_ad;
             AlertDialog open_prj_ad;
-            OnLoadProjectListener mListener;
+            ArrayList<String> prj_list;
+            Project.OnLoadItemListener mListener;
             int mItem_index=0;
     @Nullable
     @Override
@@ -54,9 +52,6 @@ public class ProjectFragment extends Fragment implements
         Prj_add=(FloatingActionButton)v.findViewById(R.id.prj_add_fab);
         Prj_add.setOnClickListener(this);
         mLv=(ListView)v.findViewById(R.id.prj_list_prj);
-        mPrj=new Project();
-        _aa=new ArrayAdapter<String>(getActivity().getApplicationContext(),R.layout.prj_ilistview_layout,mPrj.getProjects());//android.R.layout.simple_list_item_1,mPrj.getProjects());
-        mLv.setAdapter(_aa);
         mLv.setOnItemClickListener(this);
         mLv.setOnItemLongClickListener(this);
         View vv=LayoutInflater.from(getActivity().getApplicationContext()).inflate(R.layout.project_dialog_prjname,null);
@@ -84,7 +79,7 @@ public class ProjectFragment extends Fragment implements
     @Override
     public void onStart() {
         super.onStart();
-        mPrj.load_recent_project();
+        //mPrj.load_recent_project();
     }
 
     @Override
@@ -103,6 +98,14 @@ public class ProjectFragment extends Fragment implements
         prjEt.setText("");
         new_prj_ad.show();
     }
+    public void set_project(Project prj){
+        mPrj=prj;
+    }
+    public void set_prj_list(ArrayList<String> aa){
+        prj_list=aa;
+        _aa=new ArrayAdapter<String>(getActivity(),R.layout.prj_ilistview_layout,prj_list);
+        mLv.setAdapter(_aa);
+    }
 
     @Override
     public void onClick(DialogInterface dialog, int which) {
@@ -112,9 +115,8 @@ public class ProjectFragment extends Fragment implements
             {
                 if(which==DialogInterface.BUTTON_POSITIVE)
                 {
-                    String s=mPrj.getProjects().get(mItem_index);
-                    mListener.onLoadProject();
-                    //mPrj.load_project(mPrj.getProjects().get(mItem_index));
+                    String s=prj_list.get(mItem_index);
+                    mListener.onLoadProject(s);
                     _aa.notifyDataSetChanged();
                     Log.i(E,s);
                 }
@@ -124,11 +126,11 @@ public class ProjectFragment extends Fragment implements
                     if(which==DialogInterface.BUTTON_POSITIVE)
                     {
                         String text=prjEt.getText().toString();
-                        if(mPrj.isExistProject(text))
+                        if(Project.isExistProject(text))
                         {
 
                         }else {
-                            mPrj.new_project(text,true);
+                            mListener.onNewProject(text);
                             _aa.notifyDataSetChanged();
                             Log.i(E, "Prj load");
                         }
@@ -140,7 +142,7 @@ public class ProjectFragment extends Fragment implements
                         Log.i(E, "Prj del show");
                         if (which == DialogInterface.BUTTON_POSITIVE)
                         {
-                            int rlt=mPrj.remove_project(mPrj.getProjects().get(mItem_index));
+                            int rlt =mListener.onDeleteProject(prj_list.get(mItem_index));
                             switch (rlt){
                                 case 0: {
                                     _aa.notifyDataSetChanged();
@@ -174,11 +176,8 @@ public class ProjectFragment extends Fragment implements
         mItem_index=position;
         open_prj_ad.show();
     }
-            public void setOnLoadProjectListener(OnLoadProjectListener l){
-                mListener=l;
-            }
-
-    public Project getProjectInstance() {
-        return mPrj;
+    public void setOnLoadItemListener(Project.OnLoadItemListener l){
+        mListener=l;
     }
+
 }

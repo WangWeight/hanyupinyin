@@ -1,8 +1,6 @@
 package com.ev4ngel.autofly_prj;
 
 
-import android.widget.ArrayAdapter;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

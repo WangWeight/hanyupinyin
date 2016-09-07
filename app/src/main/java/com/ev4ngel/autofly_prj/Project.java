@@ -1,14 +1,8 @@
 package com.ev4ngel.autofly_prj;
 
-import android.os.Bundle;
 import android.util.Log;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Random;
 
 /**
  * Created by Administrator on 2016/7/21.
@@ -21,20 +15,26 @@ import java.util.Random;
  * 总的Activity保存一个此对象即可，
  */
 public class Project {
+    public interface OnLoadItemListener {
+        void onLoadProject(String prj_name);
+        void onLoadWaypoint(String waypoint_name);
+        void onNewProject(String prj_name);
+        int onDeleteProject(String prj_name);
+    }
+
     public static String root_dirname="/mnt/sdcard/autofly_prj/";
     public static String waypoints_dirname="waypoints/";
     public static String area_dirname="area/";
     public  static String photopoints_dirname="photowaypoints/";
     public static String prj_config_fname="config.txt";
     public static String prj_default_name="默认项目/";
-    private ProjectsConfig mPsc;
+    //private ProjectsConfig mPsc;
     private ProjectConfig mPc;
     private PhotoWayPointFile mPwf;
     private String current_airway_name;//航点，区域，存储的全部文件为此名字
     private WayPointFile mWpf;
-    private AreaFile mAf;
     public String current_project_name="";
-    private OnLoadProjectListener mOnLoader=null;
+    private OnLoadItemListener mOnLoader=null;
     public Project()
     {
         if(!isExistProject(Project.root_dirname))
@@ -44,7 +44,7 @@ public class Project {
                 Log.i("E","buildFail");
             }
         }
-        mPsc=ProjectsConfig.load(Project.root_dirname+prj_config_fname);
+        //mPsc=ProjectsConfig.load(Project.root_dirname+prj_config_fname);
     }
     public static boolean isExistProject(String name)
     {
@@ -75,14 +75,6 @@ public class Project {
     {
         return mPwf;
     }
-    public AreaFile get_area_file()
-    {
-        return mAf;
-    }
-    public  ArrayList<String> getProjects()
-    {
-        return mPsc.project_names;
-    }
     public  int remove_project(String name)
     {
         if(name.equals(prj_default_name))//若是删除默认项目，则不成功
@@ -94,8 +86,8 @@ public class Project {
                 boolean rlt=new File(root_dirname+name).renameTo(f);
                 if(rlt)
                 {
-                    mPsc.delect(name);//Delete from config file
-                    mPsc.write();
+                    //mPsc.delect(name);//Delete from config file
+                    //mPsc.write();
                     close_airway();
                     mPc.close();
                     return 0;
@@ -123,8 +115,8 @@ public class Project {
                 new File(root_dirname + name+Project.waypoints_dirname).mkdir();
                 new File(root_dirname + name+Project.area_dirname).mkdir();
                 new File(root_dirname + name+Project.photopoints_dirname).mkdir();
-                mPsc.add_prj(name);
-                mPsc.write();
+                //mPsc.add_prj(name);
+                //mPsc.write();
             }catch (Error e)
             {
                 Log.i("e","Make project dir fail"+name);
@@ -133,25 +125,6 @@ public class Project {
         }
         if(load_after_new)
             load_project(name);
-   /*     mWpf.read("new");
-        for(int i=0;i<50;i++) {
-        mWpf.add_waypoint(i*i,i*i*i,i);
-        }
-
-    Test for photoFile
-    mPwf.read("new");
-    for(int i=0;i<50;i++) {
-        PhotoWayPoint pwp=new PhotoWayPoint();
-        pwp.startTime=new Date().toString();
-        pwp.name="#"+ i;
-        pwp.alt=i;
-        pwp.lat=i*i;
-        pwp.lng=i+2;
-        pwp.stopTime=new Date().toString();
-        for(int j=0;j<4;j++)
-            pwp.addPhoto("#"+i+"-"+j,j*90,i);
-        mPwf.addPhotoWayPoint(pwp);
-    }*/
         return 0;
     }
     public static String fix_name(String name)
@@ -169,27 +142,38 @@ public class Project {
     public int load_project(String name)//the name must exists
     {
         name=fix_name(name);
-
+        if(name.equals(current_project_name))
+            return 1;
         if(!isExistProject(name))
         {
             new_project(name,false);
         }
         current_project_name=name;
+        mPc=ProjectConfig.load(name);
         mPwf=PhotoWayPointFile.load(name);
         mWpf = WayPointFile.load(name);
+        if(!mPc.recent_file.isEmpty() &&mPc.isExistsWaypoint(root_dirname+name+waypoints_dirname+mPc.recent_file)){
+            load_waypoint(name);
+        }
         //ProjectConfig.load(name);
-        mPc=mPsc.open_prj(name);
-        mPsc.setRecent_project(name);
-        mPsc.write();
-        if(mOnLoader!=null)
-            mOnLoader.onLoadProject();
+        //mPc=mPsc.open_prj(name);
+        //mPsc.setRecent_project(name);
+        //mPsc.write();
+        //if(mOnLoader!=null)
+        //    mOnLoader.onLoadProject(name);
         return 0;
     }
-    public Project new_airway(String name)
+    public void load_waypoint(String name){
+        mPc.recent_file=name;
+        mPwf.read(mPc.recent_file);
+        mWpf.read(mPc.recent_file);
+        //if(mOnLoader!=null)
+        //    mOnLoader.onLoadWaypoint(name);
+    }
+    public Project new_waypoint(String name)
     {
-        current_airway_name=name;
-        mWpf.read(name);
-        mPwf.read(name);
+        mPc.add_waypoint_file(name);
+        load_waypoint(name);
         return this;
     }
     public void close_airway()
@@ -202,25 +186,24 @@ public class Project {
     }
     public void save()
     {
-        if(mPsc!=null)
-            mPsc.write();
+        //if(mPsc!=null)
+        //    mPsc.write();
         if(mPc!=null)
             mPc.write();
         if(mPwf!=null)
             mPwf.write();
         if(mWpf!=null)
             mWpf.write();
-
     }
     public void close()
     {
         current_project_name="";
-        if(mPsc!=null)
-            mPsc.close();
+        //if(mPsc!=null)
+        //    mPsc.close();
         if(mPc!=null)
             mPc.close();
     }
-
+/*
     public void load_recent_project()
     {
         if(mPsc.recent_project==null ||mPsc.recent_project.isEmpty())
@@ -231,9 +214,12 @@ public class Project {
             load_project(mPsc.recent_project);
         }
     }
-    public void setOnProjectLoad(OnLoadProjectListener listener)
-    {
+    */
+    public void setOnLoadListener(OnLoadItemListener listener) {
         mOnLoader=listener;
+    }
+    public void load_default_project(){
+        load_project(prj_default_name);
     }
 
 }

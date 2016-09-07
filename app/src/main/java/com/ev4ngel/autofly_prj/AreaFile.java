@@ -1,7 +1,5 @@
 package com.ev4ngel.autofly_prj;
 
-import android.hardware.Camera;
-
 import org.json.JSONArray;
 
 import java.util.ArrayList;

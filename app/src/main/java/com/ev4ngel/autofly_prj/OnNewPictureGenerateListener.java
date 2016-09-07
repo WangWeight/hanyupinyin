@@ -5,4 +5,5 @@ package com.ev4ngel.autofly_prj;
  */
 public interface OnNewPictureGenerateListener {
     void onNewPicture(String pname);
+    //float getCurrnetHeading();
 }

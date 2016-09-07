@@ -1,7 +1,5 @@
 package com.ev4ngel.myapplication;
 
-import android.content.Context;
-import android.view.View;
 import android.widget.TextView;
 
 import dji.sdk.Battery.DJIBattery;

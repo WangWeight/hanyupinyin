@@ -4,8 +4,6 @@ import com.amap.api.maps2d.model.LatLng;
 
 import java.util.ArrayList;
 
-import dji.sdk.FlightController.DJIFlightControllerDataType;
-
 /**
  * Created by jason on 2016/7/5.
  * version 0.3.1

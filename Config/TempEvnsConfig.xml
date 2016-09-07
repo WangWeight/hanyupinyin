@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<TempEvnsConfig xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"> 
+	<TrafficSignLayerName>交通设施点@ExGIS_210203#1</TrafficSignLayerName>
+	<TrafficUpholderLayerName>杆点_1二维5@ExGIS_210203</TrafficUpholderLayerName>
+    <TrafficSignDatasetName>交通设施点</TrafficSignDatasetName>
+    <TrafficUpholderDatasetName>杆点</TrafficUpholderDatasetName> 
+</TempEvnsConfig>

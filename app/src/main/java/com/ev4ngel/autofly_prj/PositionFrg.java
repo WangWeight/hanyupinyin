@@ -21,6 +21,10 @@ public class PositionFrg extends Fragment {
     TextView last_pt_dist_tv;//距离上一点距离
     TextView rc_dist_tv;//距离上一点距离
     TextView rc_direction_tv;//距离上一点距离
+    TextView h_speed_tv;
+    TextView v_speed_tv;
+
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -31,6 +35,8 @@ public class PositionFrg extends Fragment {
         last_pt_dist_tv=(TextView)v.findViewById(R.id.pos_distance_tv_id);
         rc_dist_tv=(TextView)v.findViewById(R.id.rc_distance_tv_id);
         rc_direction_tv=(TextView)v.findViewById(R.id.rc_direction_tv_id);
+        h_speed_tv=(TextView)v.findViewById(R.id.hsp_tv_id);
+        v_speed_tv=(TextView)v.findViewById(R.id.vsp_tv_id);
         return v;
     }
     public void set_pos(double lat,double lng,float alt)
@@ -58,4 +64,14 @@ public class PositionFrg extends Fragment {
         if(rc_direction_tv!=null) rc_direction_tv.setText(String.format("%.1f",dist)+"度");
     }
 
+    public void setH_speed_tv(float h_speed) {
+        if(h_speed_tv!=null)
+            h_speed_tv.setText(String.format("%.1f",h_speed)+"m/s");
+    }
+
+    public void setV_speed_tv(float v_speed) {
+        if(v_speed_tv!=null)
+            v_speed_tv.setText(String.format("%.1f",v_speed)+"m/s");
+
+    }
 }

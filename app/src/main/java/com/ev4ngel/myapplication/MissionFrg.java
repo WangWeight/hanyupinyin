@@ -13,8 +13,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import com.ev4ngel.autofly_prj.OnLoadProjectListener;
-import com.ev4ngel.autofly_prj.OnPrepareMissionListener;
+import com.ev4ngel.autofly_prj.OnMissionListener;
 
 /**
  * Created by Administrator on 2016/8/9.
@@ -22,7 +21,7 @@ import com.ev4ngel.autofly_prj.OnPrepareMissionListener;
 public class MissionFrg extends Fragment implements DialogInterface.OnClickListener,
         SeekBar.OnSeekBarChangeListener ,
         CompoundButton.OnCheckedChangeListener{
-    OnPrepareMissionListener mListener;
+    OnMissionListener mListener;
     SeekBar fly_speed_sb;
     SeekBar rotate_speed_sb;
     SeekBar return_height_sb;
@@ -32,6 +31,7 @@ public class MissionFrg extends Fragment implements DialogInterface.OnClickListe
     ToggleButton mission_opt_tb;
     ToggleButton gohome_opt_tb;
     AlertDialog ask_dialog;
+    AlertDialog ask_home_dialog;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -44,6 +44,10 @@ public class MissionFrg extends Fragment implements DialogInterface.OnClickListe
                 .setView(v)
                 .setPositiveButton("确认",this)
                 .setNegativeButton("取消",null)
+                .create();
+        ask_home_dialog=new AlertDialog.Builder(getActivity())
+                .setTitle("选择返航位置")
+                .setView(LayoutInflater.from(getActivity()).inflate(R.layout.home_dialog_layout,null))
                 .create();
         fly_speed_sb=(SeekBar)v.findViewById(R.id.fly_speed_sb);
         return_height_sb=(SeekBar)v.findViewById(R.id.return_height_sb);
@@ -79,31 +83,37 @@ public class MissionFrg extends Fragment implements DialogInterface.OnClickListe
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        if(!buttonView.isPressed()) return;
         if(buttonView.getId()==mission_opt_tb.getId())
         {
-            //if(!buttonView.isPressed()) return;
             if(isChecked)
             {
                 ask_dialog.show();
             }else{
+                mListener.onStopMission();
             //stop mission here
-                mListener.onPrepareMission(0,0,MissionOptSignal.MOS_STOP);
+                //mListener.onPrepareMission(0,0,MissionOptSignal.MOS_STOP);
             }
+        }else if(buttonView.getId()==gohome_opt_tb.getId()){
+
         }
     }
 
     @Override
     public void onClick(DialogInterface dialog, int which) {
-        if(dialog!=null && dialog.toString().equals(ask_dialog.toString()))
-        {
-            if(which==DialogInterface.BUTTON_POSITIVE){
-                mListener.onPrepareMission(fly_speed_sb.getProgress(),return_height_sb.getProgress(),MissionOptSignal.MOS_PREPARE);
+        if(dialog!=null )
+            if(dialog.toString().equals(ask_dialog.toString()))
+            {
+                if(which==DialogInterface.BUTTON_POSITIVE){
+                    mListener.onPrepareMission(fly_speed_sb.getProgress(),return_height_sb.getProgress(),MissionOptSignal.MOS_PREPARE);
 
-                mission_opt_tb.setChecked(true);
-            }else{
-                mission_opt_tb.setChecked(false);
+                    mission_opt_tb.setChecked(true);
+                }else{
+                    mission_opt_tb.setChecked(false);
+                }
+            }else if(dialog.toString().equals(ask_home_dialog.toString())){
+                ask_home_dialog.show();
             }
-        }
     }
 
     @Override
@@ -128,7 +138,7 @@ public class MissionFrg extends Fragment implements DialogInterface.OnClickListe
     public void onStopTrackingTouch(SeekBar seekBar) {
 
     }
-    public void setOnPrepareMissionListener(OnPrepareMissionListener l)
+    public void setOnPrepareMissionListener(OnMissionListener l)
     {
         mListener=l;
     }

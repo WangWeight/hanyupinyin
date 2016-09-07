@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,7 +32,6 @@ import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.Polyline;
 import com.amap.api.maps2d.model.PolylineOptions;
 import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
-import com.ev4ngel.autofly_prj.WPStatus;
 import com.ev4ngel.autofly_prj.WayPoint;
 
 import java.util.ArrayList;

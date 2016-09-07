@@ -3,6 +3,8 @@ package com.ev4ngel.autofly_prj;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
+
 /**
  * Created by Administrator on 2016/7/26.
  */
@@ -21,7 +23,7 @@ public class WPStatus implements IJson{
     public WPStatus() {
         mName = "";
         mLastPos = 0;
-        mTime = 0L;
+        mTime = new Date().getTime();
         mStatus = false;
     }
     public String getName() {

@@ -8,6 +8,7 @@ import android.util.Log;
 import com.amap.api.maps2d.model.LatLng;
 import com.ev4ngel.myapplication.CalcBox;
 import com.ev4ngel.myapplication.MapFrg;
+import com.loc.p;
 
 import dji.sdk.Battery.DJIBattery;
 import dji.sdk.Camera.DJICamera;
@@ -60,13 +61,14 @@ public class StateHandler extends Handler implements
 
     @Override
     public void handleMessage(Message msg) {
+        Bundle b=msg.getData();
         switch (msg.what)
         {
             case vol_id:{
                 mSF.setVol_tv_text(msg.getData().getString("text"));
             }break;
             case salt_id:{
-                Bundle b=msg.getData();
+
                 mPF.set_pos(b.getDouble("lat"), b.getDouble("lng"), b.getFloat("alt"));
                 position_aircraft=new LatLng(b.getDouble("lat"), b.getDouble("lng"));
                 if(position_aircraft!=null){
@@ -83,6 +85,8 @@ public class StateHandler extends Handler implements
                     }
                 }
                 mSF.setSalt_tv_text(b.getDouble("sat_num"));
+                mPF.setH_speed_tv((float)b.getDouble("hspeed"));
+                mPF.setV_speed_tv((float)b.getDouble("vspeed"));
                 mMap.updatePlane(new LatLng(b.getDouble("lat"),b.getDouble("lng")),b.getInt("heading"));
             }break;
             case space_id:{
@@ -92,8 +96,10 @@ public class StateHandler extends Handler implements
                 if(position_aircraft!=null && position_rc!=null)
                 {
                     mPF.set_rc_dist(new CalcBox().coorNageCalcDistance(position_aircraft, position_rc));
-                    mPF.set_rc_direction(new CalcBox().coorNageCalcAngle(position_aircraft,position_rc));
+                    mPF.set_rc_direction(new CalcBox().coorNageCalcAngle(position_aircraft, position_rc));
+
                 }
+
             }break;
         }
     }
@@ -126,6 +132,9 @@ public class StateHandler extends Handler implements
         b.putDouble("lng", tmp.getLongitude());
         b.putFloat("alt", tmp.getAltitude());
         b.putInt("heading", djiFlightControllerCurrentState.getAircraftHeadDirection());
+        b.putDouble("hspeed", Math.sqrt(Math.pow(djiFlightControllerCurrentState.getVelocityX(), 2) + Math.pow(djiFlightControllerCurrentState.getVelocityY(),2)));
+        b.putDouble("vspeed", djiFlightControllerCurrentState.getVelocityZ());
+
         heading=djiFlightControllerCurrentState.getAircraftHeadDirection();
         b.putDouble("sat_num", djiFlightControllerCurrentState.getSatelliteCount());
         m.setData(b);

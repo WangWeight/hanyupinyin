@@ -1,84 +1,68 @@
 package com.ev4ngel.myapplication;
 
-import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.PersistableBundle;
-import android.support.design.widget.FloatingActionButton;
-import android.util.Log;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Layout;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
-import android.widget.SeekBar;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.model.LatLng;
-import com.amap.api.maps2d.model.Polygon;
-import com.ev4ngel.autofly_prj.OnLoadProjectListener;
+import com.ev4ngel.autofly_prj.OnMissionListener;
 import com.ev4ngel.autofly_prj.OnNewPictureGenerateListener;
-import com.ev4ngel.autofly_prj.OnPrepareMissionListener;
 import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
 import com.ev4ngel.autofly_prj.PhotoWayPoint;
 import com.ev4ngel.autofly_prj.PositionFrg;
 import com.ev4ngel.autofly_prj.Project;
+import com.ev4ngel.autofly_prj.ProjectConfig;
 import com.ev4ngel.autofly_prj.ProjectFragment;
+import com.ev4ngel.autofly_prj.ProjectsConfig;
 import com.ev4ngel.autofly_prj.StateFrg;
 import com.ev4ngel.autofly_prj.StateHandler;
 import com.ev4ngel.autofly_prj.WayPoint;
 
-import org.w3c.dom.Text;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.TooManyListenersException;
 
 import dji.sdk.Battery.DJIBattery;
 import dji.sdk.Camera.DJICamera;
-import dji.sdk.Camera.DJICameraParameters;
 import dji.sdk.Camera.DJICameraSettingsDef;
-import dji.sdk.Camera.DJIMedia;
 import dji.sdk.FlightController.DJIFlightController;
 import dji.sdk.FlightController.DJIFlightControllerDataType;
-import dji.sdk.FlightController.DJIFlightControllerDelegate;
 import dji.sdk.Gimbal.DJIGimbal;
 import dji.sdk.MissionManager.DJICustomMission;
 import dji.sdk.MissionManager.DJIMission;
 import dji.sdk.MissionManager.DJIMissionManager;
-import dji.sdk.MissionManager.MissionStep.DJIAircraftYawStep;
-import dji.sdk.MissionManager.MissionStep.DJIFollowmeMissionStep;
-import dji.sdk.MissionManager.MissionStep.DJIGimbalAttitudeStep;
-import dji.sdk.MissionManager.MissionStep.DJIGoToStep;
-import dji.sdk.MissionManager.MissionStep.DJIMissionStep;
+import dji.sdk.MissionManager.DJIWaypointMission;
 import dji.sdk.RemoteController.DJIRemoteController;
-import dji.sdk.SDKManager.DJISDKManager;
 import dji.sdk.base.DJIBaseComponent;
 import dji.sdk.base.DJIBaseProduct;
 import dji.sdk.base.DJIError;
-import dji.sdk.util.DJIParamCapability;
-import dji.sdk.util.DJIParamMinMaxCapability;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         Toolbar.OnMenuItemClickListener,
         View.OnClickListener,
-        OnLoadProjectListener,
+        Project.OnLoadItemListener,
         OnSaveWayPointListener,
         OnNewPictureGenerateListener,
-        OnPrepareMissionListener{
+        OnMissionListener,
+        GotoCompletionCallback.OnComponentOperationListener{
     private DJIGimbal gimbal = null;
     private DJICamera camera = null;
     private DJIBattery battery = null;
@@ -94,6 +78,8 @@ public class MainActivity extends AppCompatActivity
     String position_frg_tag="position_frg";
     String mission_frg_tag="mission_frg";
     Project mProject=null;
+    ProjectsConfig mPrjsCfg;
+    ProjectConfig mCurrentPrjCfg;
     //views
     private ArrayList<ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>> missionLocations;
     private Toolbar toolbar;
@@ -105,8 +91,11 @@ public class MainActivity extends AppCompatActivity
     private MissionFrg mMissionFrg;
     private StateHandler mStateHandler;
     private ArrayList<WayPoint> mWayPoints;
+    BaseFpvView fpv_view;
+
+    LatLng mHomeLatlng=null;
     //tools
-    T log;
+    //T log;
     private CustomMission mCM = null;
 
     protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -120,10 +109,12 @@ public class MainActivity extends AppCompatActivity
                 getFlightController();
                 getRemoteController();
                 registerComponentListener();
+                //fpv_view=new BaseFpvView(AutoflyApplication.getContext(),null);
+                //((FrameLayout)findViewById(R.id.fpv_view)).addView(fpv_view);
                 if (mMissonManager == null) {
                     mMissonManager = DJIMissionManager.getInstance();
                 }
-                mCM.initComponet(flightController,gimbal,camera);
+                //mCM.initComponet(flightController,gimbal,camera);
             } else {
                 mMissonManager = null;
                 camera = null;
@@ -156,10 +147,12 @@ public class MainActivity extends AppCompatActivity
 
 
     public void registerUiListener() {
-        mProjectFrg.setOnLoadProjectListener(this);
-        mProjectFrg.getProjectInstance().setOnProjectLoad(this);
+        mProjectFrg.setOnLoadItemListener(this);
+        mProject.setOnLoadListener(this);
         mMapFrg.setOnSaveWayPointListener(this);
         mMissionFrg.setOnPrepareMissionListener(this);
+
+        mProjectFrg.set_prj_list(mPrjsCfg.getProjects());
     }
 
     private DJIBaseProduct getProduct() {
@@ -219,8 +212,7 @@ public class MainActivity extends AppCompatActivity
         if(AutoflyApplication.getHandHeldInstance()!=null){
             if(remote==null)
                 remote=AutoflyApplication.getAircraftInstance().getRemoteController();
-            if(remote==null)
-                Tools.showToast(getApplicationContext(),"RC fail");
+
         }
     }
     private void getFlightController()//初始化飞控
@@ -239,20 +231,21 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void prepareMissions() {
+
         if (mMissonManager != null && mMission != null) {
             mMissonManager.prepareMission(mMission, new DJIMission.DJIMissionProgressHandler() {
                 @Override
                 public void onProgress(DJIMission.DJIProgressType djiProgressType, float v) {
-                    log.i("on progress");
+                    Log.i("e","on progress");
                 }
             }, new DJIBaseComponent.DJICompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
-                        log.i("Prepare mission OK");
+                        Log.i("e","Prepare mission OK");
                         onPrepareMission(0,0,MissionOptSignal.MOS_START);
                     } else {
-                        log.i("Prepare mission fail on result");
+                        Log.i("e","Prepare mission fail on result");
                     }
                 }
             });
@@ -270,10 +263,10 @@ public class MainActivity extends AppCompatActivity
                         mRollRotation = new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise);
                 gimbal.rotateGimbalByAngle(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle, mPitchRotation, mYawRotation, mRollRotation, null);//
             } catch (Exception e) {
-                log.i("In reset,exception" + e.getMessage());
+                Log.i("e","In reset,exception" + e.getMessage());
             }
         } else {
-            log.i("In reset,gimbal null");
+            Log.i("e","In reset,gimbal null");
         }
     }
 
@@ -314,8 +307,21 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
+
+        mPrjsCfg=ProjectsConfig.load(Project.root_dirname+Project.prj_config_fname);
+        mProject=new Project();
+        if(!mPrjsCfg.recent_project.equals("")) {
+            mCurrentPrjCfg=mPrjsCfg.open_prj(mPrjsCfg.recent_project);
+            //mProject.load_project(mPrjsCfg.recent_project);
+            onLoadProject(mPrjsCfg.recent_project);
+        } else {
+            //mProject.load_default_project();
+            onLoadProject(Project.prj_default_name);
+        }
         initParams();
+        mProjectFrg.set_project(mProject);
         //mMapFrg.onCreate(savedInstanceState);
         //init in initUi
         _registerReceiver();
@@ -327,14 +333,13 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        log = new T(getApplicationContext());
-
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         registerUiListener();
+        onLoadProject(mProject.current_project_name);
     }
     @Override
     public void onBackPressed() {
@@ -445,14 +450,15 @@ public class MainActivity extends AppCompatActivity
         switch (v.getId()) {
         }
     }
-    public void onLoadProject()
+    public void onLoadProject(String prj_name)
     {
+        mProject.load_project(prj_name);
         TextView tv1=((TextView) findViewById(R.id.nav_prj_name));
         if(tv1!=null)
-            tv1.setText("当前项目:" + mProjectFrg.getProjectInstance().current_project_name);
+            tv1.setText("当前项目:" + mProject.current_project_name);
         TextView tv2=((TextView)findViewById(R.id.nav_prj_detail));
         if(tv2!=null)
-            tv2.setText(mProjectFrg.getProjectInstance().current_project_name);
+            tv2.setText(mProject.current_project_name);
 
     }
 
@@ -462,32 +468,42 @@ public class MainActivity extends AppCompatActivity
         {
             if(mProjectFrg!=null)
             {
-                mProjectFrg.getProjectInstance().new_airway(fname).get_wp_file().set_waypoints(wps);
+                mProject.new_waypoint(fname).get_wp_file().set_waypoints(wps);
                 mWayPoints=wps;
             }
         }
     }
-    public void onLoadNewWayPoints(String wpfile)
+    public void onLoadWaypoint(String wpfile)
     {
-        mProjectFrg.getProjectInstance().get_wp_file().read(wpfile);
-        mWayPoints=mProjectFrg.getProjectInstance().get_wp_file().get_waypoints();
+        mWayPoints=mProject.get_wp_file().get_waypoints();
         //mNavHeadFrg.update();
         mMapFrg.setWayPoints(mWayPoints).drawline(true);
     }
 
     @Override
     public void onNewPicture(String pname) {
-        PhotoWayPoint pwp=new PhotoWayPoint();
-        //pwp.addPhoto(pname,(float)flightController.getCompass().getHeading(),flightController);
-        //mProjectFrg.getProjectInstance().get_pwp_file().addPhotoWayPoint(pwp);
-
         if(flightController!=null) {
+            //PhotoWayPoint pwp=new PhotoWayPoint();
+            //pwp.addPhoto(pname,(float)flightController.getCompass().getHeading(),0);
+            //mProject.get_pwp_file().addPhotoWayPoint(pwp);
             mStateHandler.setPhotoTakenPosition(flightController.getCurrentState().getAircraftLocation().getCoordinate2D());
         }
     }
 
     @Override
+    public void onStartMission() {
+
+    }
+
+    @Override
     public void onPrepareMission(int speed,int height,int signal) {
+        mWayPoints=new ArrayList<>();
+        mWayPoints.add(new WayPoint(41.802412,123.425932,0));
+        mWayPoints.add(new WayPoint(41.802448,123.426676,0));
+        mWayPoints.add(new WayPoint(41.802484,123.42742,0));
+        mWayPoints.add(new WayPoint(41.80252,123.428164,0));
+        mWayPoints.add(new WayPoint(41.802556,123.428908,0));
+        mWayPoints.add(new WayPoint(41.802579, 123.429388,0));
         if(mWayPoints==null ||mWayPoints.size()==0)
         {
             Toast.makeText(MainActivity.this, "请先规划或者选择航线", Toast.LENGTH_SHORT).show();
@@ -528,4 +544,51 @@ public class MainActivity extends AppCompatActivity
     public void onGoHomeMission() {
         //mMission=mCM.ge
     }
+
+    public void rotateCamera(int pitch,int yaw){
+        /*gimbal.rotateGimbalByAngle(a, b, c, d, new DJIBaseComponent.DJICompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                takePhoto();
+            }
+        });*/
+    }
+
+    @Override
+    public void resetCamera() {
+
+    }
+
+    public void takePhoto(){
+        if(camera!=null){
+            camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJIBaseComponent.DJICompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+
+                }
+            });
+            try {
+                Thread.sleep(2000);
+            }catch (InterruptedException e){
+
+            }
+        }
+    }
+
+    @Override
+    public void onStopMission() {
+
+    }
+
+    @Override
+    public int onDeleteProject(String prj_name) {
+       return  mProject.remove_project(prj_name);
+    }
+
+    @Override
+    public void onNewProject(String prj_name) {
+        mProject.new_project(prj_name,true);
+        mPrjsCfg.add_prj(prj_name);
+    }
+
 }

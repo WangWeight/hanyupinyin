@@ -1,20 +1,23 @@
 package com.ev4ngel.autofly_prj;
-import android.content.Context;
+
 import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-
-import org.json.*;
 class JsonFile<T>{
 	protected FileOutputStream mFos;
 	protected String mContent;
 	protected String mFilename;
 	protected String mPrjname;
+	protected JSONObject mJSONObject;
 	public JsonFile()
 	{
 	}
@@ -61,7 +64,6 @@ class JsonFile<T>{
 			open(false);
 			mFos.write(mContent.getBytes());
             mFos.flush();
-			//close();
 		}catch(IOException ioe)
 		{
 		}
@@ -87,6 +89,19 @@ class JsonFile<T>{
 			}
 		}
 		return ja;
+	}
+	public boolean parse_content_to_object(){
+		if (mContent.length()!=0){//Read the content if the file is not empty
+			try {
+				mJSONObject = new JSONObject(new JSONTokener(mContent));
+				return true;
+			} catch(JSONException e)
+			{
+				mJSONObject=new JSONObject();
+			}
+		}
+		mJSONObject=new JSONObject();
+		return false;
 	}
 	/*
 	public ArrayList<T> parse_content_to_array()

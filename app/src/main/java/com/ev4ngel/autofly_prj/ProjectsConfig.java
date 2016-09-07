@@ -110,6 +110,15 @@ public class ProjectsConfig extends JsonFile{
 
     public void setRecent_project(String rp)
     {
-        recent_project=rp;
+     try {
+         jObj.put(item_RP, rp);
+         recent_project = rp;
+     }catch(JSONException je){
+
+         }
+    }
+    public  ArrayList<String> getProjects()
+    {
+        return project_names;
     }
 }

@@ -1,7 +1,5 @@
 package com.ev4ngel.myapplication;
 
-import android.graphics.BitmapFactory;
-
 import com.amap.api.maps2d.model.BitmapDescriptor;
 import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 
