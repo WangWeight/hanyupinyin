@@ -12,22 +12,19 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Layout;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amap.api.maps2d.model.LatLng;
+import com.ev4ngel.autofly_prj.FPView_frg;
 import com.ev4ngel.autofly_prj.OnMissionListener;
 import com.ev4ngel.autofly_prj.OnNewPictureGenerateListener;
 import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
-import com.ev4ngel.autofly_prj.PhotoWayPoint;
 import com.ev4ngel.autofly_prj.PositionFrg;
 import com.ev4ngel.autofly_prj.Project;
 import com.ev4ngel.autofly_prj.ProjectConfig;
@@ -50,7 +47,6 @@ import dji.sdk.Gimbal.DJIGimbal;
 import dji.sdk.MissionManager.DJICustomMission;
 import dji.sdk.MissionManager.DJIMission;
 import dji.sdk.MissionManager.DJIMissionManager;
-import dji.sdk.MissionManager.DJIWaypointMission;
 import dji.sdk.RemoteController.DJIRemoteController;
 import dji.sdk.base.DJIBaseComponent;
 import dji.sdk.base.DJIBaseProduct;
@@ -79,6 +75,7 @@ public class MainActivity extends AppCompatActivity
     String state_frg_tag="state_frg";
     String position_frg_tag="position_frg";
     String mission_frg_tag="mission_frg";
+    String cameraView_frg_tag="cameraView_frg";
     Project mProject=null;
     ProjectsConfig mPrjsCfg;
     ProjectConfig mCurrentPrjCfg;
@@ -91,6 +88,7 @@ public class MainActivity extends AppCompatActivity
     private StateFrg mStateFrg;
     private PositionFrg mPositionFrg;
     private MissionFrg mMissionFrg;
+    private FPView_frg mFPViewfrg;
     private StateHandler mStateHandler;
     private ArrayList<WayPoint> mWayPoints;
     BaseFpvView fpv_view;
@@ -283,12 +281,14 @@ public class MainActivity extends AppCompatActivity
         mStateFrg=new StateFrg();
         mPositionFrg=new PositionFrg();
         mMissionFrg=new MissionFrg();
+        mFPViewfrg=new FPView_frg();
         mFrgShow=new FragmentShower(getFragmentManager());
         mFrgShow.add(R.id.prj_frg,mProjectFrg,prj_frg_tag)
                 .add(R.id.map_frg,mMapFrg,map_frg_tag)
                 .add(R.id.mission_frg, mMissionFrg, mission_frg_tag)
                 .add(R.id.position_frg, mPositionFrg, position_frg_tag)
                 .add(R.id.state_frg, mStateFrg, state_frg_tag, true)
+                .add(R.id.fpv_view,mFPViewfrg,cameraView_frg_tag)
                 .show(new String[]{prj_frg_tag});
 
         //getFragmentManager().beginTransaction().add(R.id.state_frg,mStateFrg,"state_frg").commit();
@@ -388,8 +388,8 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_cam_or_map) {
             mMapFrg.setMode(MapMode.Reference);
             mFrgShow.show(new String[]{map_frg_tag,position_frg_tag,mission_frg_tag});
-        } else if (id == R.id.nav_settings) {
-
+        } else if (id == R.id.nav_cameraView) {
+            mFrgShow.show(new String[]{cameraView_frg_tag});
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
