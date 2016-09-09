@@ -37,6 +37,7 @@ import com.ev4ngel.autofly_prj.WayPoint;
 import java.util.ArrayList;
 
 import dji.sdk.FlightController.DJIFlightControllerDataType;
+import dji.sdk.MissionManager.DJIMissionManager;
 
 /**
  * Created by Administrator on 2016/7/15.

@@ -38,6 +38,8 @@ import com.ev4ngel.autofly_prj.StateHandler;
 import com.ev4ngel.autofly_prj.WayPoint;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import dji.sdk.Battery.DJIBattery;
 import dji.sdk.Camera.DJICamera;
@@ -168,8 +170,7 @@ public class MainActivity extends AppCompatActivity
     {
         if (AutoflyApplication.isAircraftConnected() && gimbal == null) {
             gimbal = getProduct().getGimbal();
-
-            gimbal.setCompletionTimeForControlAngleAction(1);
+            gimbal.setCompletionTimeForControlAngleAction(0.5);
             /*
             if (gimbal == null) {
                 Tools.showToast(getApplicationContext(), "Init Gimbal Fail");
@@ -558,7 +559,37 @@ public class MainActivity extends AppCompatActivity
     public void resetCamera() {
 
     }
+    public void take3Photos(int mode){
+        if(camera!=null&&gimbal!=null){
+            DJIGimbal.DJIGimbalAttitude attitude= gimbal.getAttitudeInDegrees();
+            for(int i=0;i<3;i++) {
+                final CountDownLatch cd=new CountDownLatch(1);
 
+                gimbal.rotateGimbalByAngle(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle,
+                        new DJIGimbal.DJIGimbalAngleRotation(true, attitude.pitch, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+                        new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+                        new DJIGimbal.DJIGimbalAngleRotation(true, 15 * mode, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+                        new DJIBaseComponent.DJICompletionCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+                                if (djiError == null) {
+                                    camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJIBaseComponent.DJICompletionCallback() {
+                                        @Override
+                                        public void onResult(DJIError djiError) {
+                                            cd.countDown();
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                try{
+                    cd.await(2, TimeUnit.SECONDS);
+                }catch (Exception e){
+
+                }
+            }
+        }
+    }
     public void takePhoto(){
         if(camera!=null){
             camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJIBaseComponent.DJICompletionCallback() {

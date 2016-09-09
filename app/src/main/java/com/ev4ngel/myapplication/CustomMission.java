@@ -48,7 +48,14 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
 
     public int fly_speed;
     public int return_height;
-  public CustomMission()
+    private DJIGimbalAttitudeStep getDownCameraStep(int pitch){
+        return new DJIGimbalAttitudeStep(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle,
+                new DJIGimbal.DJIGimbalAngleRotation(true, pitch, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+                new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+                new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise), null);
+    }
+
+    public CustomMission()
     {
     }
     public void setWayPoints(ArrayList<WayPoint> wp)
@@ -83,10 +90,7 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
             steps.add(gotoStep);
 
             if(count==0) {//到达第一个指定位置后初始为向下镜头
-                steps.add(new DJIGimbalAttitudeStep(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle,
-                        new DJIGimbal.DJIGimbalAngleRotation(true, -90, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise), null));
+                steps.add(getDownCameraStep(-90));
                 if(mMisProListener!=null&&wayPoints.size()>2){
                     double heading=mMisProListener.getHeading();
                     steps.add(new DJIAircraftYawStep(new CalcBox().coorNageCalcAngle(wayPoints.get(0).toLatLng(), wayPoints.get(1).toLatLng())-heading, 50, new DJIBaseComponent.DJICompletionCallback() {
@@ -290,9 +294,27 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
 
     public DJIMission generateGoHomeMission(DJIFlightControllerDataType.DJILocationCoordinate2D latlng,int height)
     {
-        DJIGoHomeStep gohome=new DJIGoHomeStep(null);
-        return null;
+        ArrayList<DJIMissionStep> list=new ArrayList<>();
+        list.add(getDownCameraStep(-45));
+        list.add(new DJIGoHomeStep(null));
+        (new DJIGoHomeStep(null)).run();
+        return new DJICustomMission(list);
 
+    }
+    /*
+    @parma:direction 方向，1顺时针，-1逆时针
+     */
+    public DJIMission generate3PhotosMission(int pitch,int direction){
+        ArrayList<DJIMissionStep> list=new ArrayList<>();
+        for(int i=0;i<3;i++){
+            list.add(new DJIGimbalAttitudeStep(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle,
+                            new DJIGimbal.DJIGimbalAngleRotation(true, pitch, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+                            new DJIGimbal.DJIGimbalAngleRotation(false, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+                            new DJIGimbal.DJIGimbalAngleRotation(false, 15 * (i-1)*direction, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+                            null));
+            list.add(new DJIShootPhotoStep(null));
+            }
+        return new DJICustomMission(list);
     }
     public void setOnNewPictureListener(OnNewPictureGenerateListener l)
     {
