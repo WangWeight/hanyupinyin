@@ -2,10 +2,10 @@ package com.ev4ngel.myapplication;
 
 import android.util.Log;
 
-import dji.sdk.Camera.DJICameraSettingsDef;
-import dji.sdk.Gimbal.DJIGimbal;
-import dji.sdk.base.DJIBaseComponent;
-import dji.sdk.base.DJIError;
+import dji.common.gimbal.DJIGimbalAngleRotation;
+import dji.common.gimbal.DJIGimbalRotateDirection;
+import dji.common.util.DJICommonCallbacks;
+import dji.common.error.DJIError;
 
 /**
  * Created by Administrator on 2016/7/7.
@@ -14,7 +14,7 @@ import dji.sdk.base.DJIError;
  * 下一点顺序为：左-后-右-前-下，逆时针
  * 同时记录当前姿态信息给文件
  */
-public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCallback{
+public class GotoCompletionCallback implements DJICommonCallbacks.DJICompletionCallback {
     public interface OnComponentOperationListener{
         void rotateCamera(int a,int b);
         void resetCamera();
@@ -45,11 +45,11 @@ public class GotoCompletionCallback implements DJIBaseComponent.DJICompletionCal
             */
             //pwPoint.startTime=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
             //pwPoint.heading= mFC.getCompass().getHeading();
-            DJIGimbal.DJIGimbalRotateDirection direction=(mDirection==0)? DJIGimbal.DJIGimbalRotateDirection.Clockwise: DJIGimbal.DJIGimbalRotateDirection.CounterClockwise;
-            DJIGimbal.DJIGimbalAngleRotation
-                    mPitchRotation=new DJIGimbal.DJIGimbalAngleRotation(true,0,direction),
-                    mRollRotation=new DJIGimbal.DJIGimbalAngleRotation(true,0,direction),
-                    mYawRotation=new DJIGimbal.DJIGimbalAngleRotation(true,0,direction);
+            DJIGimbalRotateDirection direction=(mDirection==0)? DJIGimbalRotateDirection.Clockwise: DJIGimbalRotateDirection.CounterClockwise;
+            DJIGimbalAngleRotation
+                    mPitchRotation=new DJIGimbalAngleRotation(true,0,direction),
+                    mRollRotation=new DJIGimbalAngleRotation(true,0,direction),
+                    mYawRotation=new DJIGimbalAngleRotation(true,0,direction);
             for(int i=0;i<5;i++) {
                 if(i==0){//第一个位置不转相机
                     //mListener.rotateCamera();

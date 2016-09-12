@@ -8,14 +8,14 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import dji.sdk.Products.DJIAircraft;
-import dji.sdk.Products.DJIHandHeld;
-import dji.sdk.SDKManager.DJISDKManager;
+import dji.sdk.products.DJIAircraft;
+import dji.sdk.products.DJIHandHeld;
+import dji.sdk.sdkmanager.DJISDKManager;
 import dji.sdk.base.DJIBaseComponent;
 import dji.sdk.base.DJIBaseProduct;
-import dji.sdk.base.DJIError;
-import dji.sdk.base.DJISDKError;
-
+import dji.common.error.DJIError;
+import dji.common.error.DJISDKError;
+import dji.common.product.Model;
 /**
  * Created by Administrator on 2016/7/1.
  */
@@ -152,7 +152,7 @@ public class AutoflyApplication extends Application {
     {
         if(isAircraftConnected())
         {
-            return (mProduct.getModel()== DJIBaseProduct.Model.Phantom_3_4K)||(mProduct.getModel()== DJIBaseProduct.Model.Phantom_3_Professional)||(mProduct.getModel()== DJIBaseProduct.Model.Phantom_3_Advanced)||(mProduct.getModel()== DJIBaseProduct.Model.Phantom_3_Standard)||(mProduct.getModel()== DJIBaseProduct.Model.Phantom_4);
+            return (mProduct.getModel()== Model.Phantom_3_4K)||(mProduct.getModel()== Model.Phantom_3_Professional)||(mProduct.getModel()== Model.Phantom_3_Advanced)||(mProduct.getModel()== Model.Phantom_3_Standard)||(mProduct.getModel()== Model.Phantom_4);
         }
         return false;
     }
@@ -160,7 +160,7 @@ public class AutoflyApplication extends Application {
     {
         if(isAircraftConnected())
         {
-            return  (mProduct.getModel()== DJIBaseProduct.Model.Inspire_1)||(mProduct.getModel()== DJIBaseProduct.Model.Inspire_1_Pro)||(mProduct.getModel()== DJIBaseProduct.Model.Inspire_1_Raw);
+            return  (mProduct.getModel()== Model.Inspire_1)||(mProduct.getModel()== Model.Inspire_1_Pro)||(mProduct.getModel()== Model.Inspire_1_Raw);
         }
         return false;
     }

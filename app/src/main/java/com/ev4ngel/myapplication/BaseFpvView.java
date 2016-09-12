@@ -6,24 +6,27 @@ import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
-import dji.sdk.AirLink.DJILBAirLink;
-import dji.sdk.Camera.DJICamera;
-import dji.sdk.Codec.DJICodecManager;
+import dji.common.camera.DJICameraSettingsDef;
+import dji.common.product.Model;
+import dji.sdk.codec.DJICodecManager;
+import dji.sdk.airlink.DJILBAirLink;
 import dji.sdk.base.DJIBaseProduct;
+import dji.sdk.camera.DJICamera;
 
 /**
  * This class is designed for showing the fpv video feed from the camera or Lightbridge 2.
  */
-public class BaseFpvView extends RelativeLayout implements TextureView.SurfaceTextureListener {
+public class BaseFpvView extends RelativeLayout implements TextureView.SurfaceTextureListener,
+        View.OnTouchListener{
 
     private TextureView mVideoSurface = null;
-    private Button mButton=null;
     private DJICamera.CameraReceivedVideoDataCallback mReceivedVideoDataCallback = null;
     private DJILBAirLink.DJIOnReceivedVideoCallback mOnReceivedVideoCallback = null;
     private DJICodecManager mCodecManager = null;
@@ -44,7 +47,7 @@ public class BaseFpvView extends RelativeLayout implements TextureView.SurfaceTe
         Log.v("TAG", "Start to test");
 
         mVideoSurface = (TextureView) findViewById(R.id.texture_video_previewer_surface);
-        mButton=(Button)findViewById(R.id.texture_video_bt);
+        mVideoSurface.setOnTouchListener(this);
         if (null != mVideoSurface) {
             mVideoSurface.setSurfaceTextureListener(this);
 
@@ -70,13 +73,26 @@ public class BaseFpvView extends RelativeLayout implements TextureView.SurfaceTe
 
         initSDKCallback();
     }
+    private void setCameraLen(){
+        try {
+            mProduct = AutoflyApplication.getProductInstance();
 
+            if (mProduct.getModel() != Model.UnknownAircraft) {
+                mProduct.getCamera().setLensFocusMode(DJICameraSettingsDef.CameraLensFocusMode.Auto,null);
+                mProduct.getCamera().setExposureMode(DJICameraSettingsDef.CameraExposureMode.Program,null);
+                mProduct.getCamera().setLensFocusTarget(0.5F,0.5F,null);
+            } else {
+                mProduct.getAirLink().getLBAirLink().setDJIOnReceivedVideoCallback(mOnReceivedVideoCallback);
+            }
+        } catch (Exception exception) {}
+    }
     private void initSDKCallback() {
         try {
             mProduct = AutoflyApplication.getProductInstance();
 
-            if (mProduct.getModel() != DJIBaseProduct.Model.UnknownAircraft) {
+            if (mProduct.getModel() != Model.UnknownAircraft) {
                 mProduct.getCamera().setDJICameraReceivedVideoDataCallback(mReceivedVideoDataCallback);
+                setCameraLen();
 
             } else {
                 mProduct.getAirLink().getLBAirLink().setDJIOnReceivedVideoCallback(mOnReceivedVideoCallback);
@@ -108,5 +124,11 @@ public class BaseFpvView extends RelativeLayout implements TextureView.SurfaceTe
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        setCameraLen();
+        return false;
     }
 }

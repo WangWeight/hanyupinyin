@@ -1,28 +1,32 @@
 package com.ev4ngel.myapplication;
 
 import android.util.Log;
-import android.widget.Toast;
 
 import com.ev4ngel.autofly_prj.OnNewPictureGenerateListener;
 import com.ev4ngel.autofly_prj.WayPoint;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 
-import dji.sdk.Camera.DJICamera;
-import dji.sdk.Camera.DJIMedia;
-import dji.sdk.FlightController.DJIFlightController;
-import dji.sdk.FlightController.DJIFlightControllerDataType;
-import dji.sdk.Gimbal.DJIGimbal;
-import dji.sdk.MissionManager.DJICustomMission;
-import dji.sdk.MissionManager.DJIMission;
-import dji.sdk.MissionManager.MissionStep.DJIAircraftYawStep;
-import dji.sdk.MissionManager.MissionStep.DJIGimbalAttitudeStep;
-import dji.sdk.MissionManager.MissionStep.DJIGoHomeStep;
-import dji.sdk.MissionManager.MissionStep.DJIGoToStep;
-import dji.sdk.MissionManager.MissionStep.DJIMissionStep;
-import dji.sdk.MissionManager.MissionStep.DJIShootPhotoStep;
+import dji.common.flightcontroller.DJILocationCoordinate2D;
+
+import dji.common.gimbal.DJIGimbalAngleRotation;
+import dji.common.gimbal.DJIGimbalRotateAngleMode;
+import dji.common.gimbal.DJIGimbalRotateDirection;
+import dji.common.util.DJICommonCallbacks;
 import dji.sdk.base.DJIBaseComponent;
-import dji.sdk.base.DJIError;
+import dji.common.error.DJIError;
+import dji.sdk.camera.DJICamera;
+import dji.sdk.camera.DJIMedia;
+import dji.sdk.gimbal.DJIGimbal;
+import dji.sdk.missionmanager.DJICustomMission;
+import dji.sdk.missionmanager.DJIMission;
+import dji.sdk.missionmanager.missionstep.DJIAircraftYawStep;
+import dji.sdk.missionmanager.missionstep.DJIGimbalAttitudeStep;
+import dji.sdk.missionmanager.missionstep.DJIGoHomeStep;
+import dji.sdk.missionmanager.missionstep.DJIGoToStep;
+import dji.sdk.missionmanager.missionstep.DJIMissionStep;
+import dji.sdk.missionmanager.missionstep.DJIShootPhotoStep;
 
 /**
  * Created by Administrator on 2016/7/13.
@@ -33,7 +37,7 @@ import dji.sdk.base.DJIError;
  * mMission=cm.genrateMission()
  *
  */
-public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallback{
+public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallback {
     public interface OnMissionProcessListener{
         void onTakePhoto(int index);
         void onGotoStep();
@@ -41,7 +45,7 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
         void onLeftTarget(int index);
         float getHeading();
     }
-    private ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> boundary;
+    private ArrayList<DJILocationCoordinate2D> boundary;
     public ArrayList<WayPoint> wayPoints;
     private OnNewPictureGenerateListener mListener;
     private OnMissionProcessListener mMisProListener;
@@ -49,10 +53,10 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
     public int fly_speed;
     public int return_height;
     private DJIGimbalAttitudeStep getDownCameraStep(int pitch){
-        return new DJIGimbalAttitudeStep(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle,
-                new DJIGimbal.DJIGimbalAngleRotation(true, pitch, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise), null);
+        return new DJIGimbalAttitudeStep(DJIGimbalRotateAngleMode.AbsoluteAngle,
+                new DJIGimbalAngleRotation(true, pitch, DJIGimbalRotateDirection.Clockwise),
+                new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise),
+                new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise), null);
     }
 
     public CustomMission()
@@ -70,20 +74,22 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
     public DJIMission generate3PhotoMission(){
         return new DJICustomMission(null);
     }
-    public DJIMission generateInspireMission()
-    {
-        ArrayList<DJIMissionStep> steps=new ArrayList<DJIMissionStep>() ;
+    public DJIMission generateInspireMission2(){
+        ArrayList<DJIMissionStep> steps=new ArrayList<>() ;
         int count=0;
         for(WayPoint wp:wayPoints)
         {
             //GotoCompletionCallback gtc=new GotoCompletionCallback();
             //gtc.setOnComponentOperationListener(mOnComponentOperationListener);
             final int ct_count=count;
-            DJIGoToStep gotoStep = new DJIGoToStep(wp.lat, wp.lng, new DJIBaseComponent.DJICompletionCallback() {
+            DJIGoToStep gotoStep = new DJIGoToStep(wp.lat, wp.lng, new DJICommonCallbacks.DJICompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if(mMisProListener!=null)
-                    mMisProListener.onReachTarget(ct_count);
+                    if(mMisProListener!=null) {
+                        mMisProListener.onReachTarget(ct_count);
+                        final CountDownLatch cdl=new CountDownLatch(1);
+
+                    }
                 }
             });
             gotoStep.setFlightSpeed(fly_speed);
@@ -93,7 +99,7 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
                 steps.add(getDownCameraStep(-90));
                 if(mMisProListener!=null&&wayPoints.size()>2){
                     double heading=mMisProListener.getHeading();
-                    steps.add(new DJIAircraftYawStep(new CalcBox().coorNageCalcAngle(wayPoints.get(0).toLatLng(), wayPoints.get(1).toLatLng())-heading, 50, new DJIBaseComponent.DJICompletionCallback() {
+                    steps.add(new DJIAircraftYawStep(new CalcBox().coorNageCalcAngle(wayPoints.get(0).toLatLng(), wayPoints.get(1).toLatLng())-heading, 50, new DJICommonCallbacks.DJICompletionCallback() {
                         @Override
                         public void onResult(DJIError djiError) {
 
@@ -105,35 +111,35 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
             for(int i=0;i<5;i++) {
                 final int ii=i;
                 if(i!=0) {
-                    DJIGimbal.DJIGimbalAngleRotation yaw=new DJIGimbal.DJIGimbalAngleRotation(true,0, DJIGimbal.DJIGimbalRotateDirection.Clockwise);
-                    DJIGimbal.DJIGimbalAngleRotation pitch=new DJIGimbal.DJIGimbalAngleRotation(true,0, DJIGimbal.DJIGimbalRotateDirection.Clockwise);
-                    DJIGimbal.DJIGimbalAngleRotation roll=new DJIGimbal.DJIGimbalAngleRotation(true,0, DJIGimbal.DJIGimbalRotateDirection.Clockwise);
+                    DJIGimbalAngleRotation yaw=new DJIGimbalAngleRotation(true,0, DJIGimbalRotateDirection.Clockwise);
+                    DJIGimbalAngleRotation pitch=new DJIGimbalAngleRotation(true,0,DJIGimbalRotateDirection.Clockwise);
+                    DJIGimbalAngleRotation roll=new DJIGimbalAngleRotation(true,0, DJIGimbalRotateDirection.Clockwise);
 
                     if(count%2==0){//偶数顺时针，pitch逆时针
-                            if(i==1) {
-                                yaw.angle=0;
-                                pitch.angle =45;
-                                pitch.direction= DJIGimbal.DJIGimbalRotateDirection.Clockwise;
-                            }
-                            else {
-                                yaw.angle=90;
-                                yaw.direction= DJIGimbal.DJIGimbalRotateDirection.Clockwise;
-                                pitch.angle = 0;
-                            }
+                        if(i==1) {
+                            yaw.angle=0;
+                            pitch.angle =45;
+                            pitch.direction= DJIGimbalRotateDirection.Clockwise;
+                        }
+                        else {
+                            yaw.angle=90;
+                            yaw.direction= DJIGimbalRotateDirection.Clockwise;
+                            pitch.angle = 0;
+                        }
                     }else {
-                            if(i==4) {
-                                yaw.angle=0;
-                                pitch.angle = 45;
-                                pitch.direction= DJIGimbal.DJIGimbalRotateDirection.CounterClockwise;
-                            } else {
-                                yaw.angle=90;
-                                yaw.direction= DJIGimbal.DJIGimbalRotateDirection.CounterClockwise;
-                                pitch.angle = 0;
-                            }
+                        if(i==4) {
+                            yaw.angle=0;
+                            pitch.angle = 45;
+                            pitch.direction= DJIGimbalRotateDirection.CounterClockwise;
+                        } else {
+                            yaw.angle=90;
+                            yaw.direction= DJIGimbalRotateDirection.CounterClockwise;
+                            pitch.angle = 0;
+                        }
                     }
 
-                    DJIGimbalAttitudeStep att_step = new DJIGimbalAttitudeStep(DJIGimbal.DJIGimbalRotateAngleMode.RelativeAngle,
-                             pitch, roll,yaw, new DJIBaseComponent.DJICompletionCallback() {
+                    DJIGimbalAttitudeStep att_step = new DJIGimbalAttitudeStep(DJIGimbalRotateAngleMode.RelativeAngle,
+                            pitch, roll,yaw, new DJICommonCallbacks.DJICompletionCallback() {
                         @Override
                         public void onResult(DJIError djiError) {
                             Log.i("E", "is null?" + (djiError == null));
@@ -143,7 +149,95 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
                     att_step.completionTime=0.5;
                     steps.add(att_step);
                 }
-                steps.add(new DJIShootPhotoStep(new DJIBaseComponent.DJICompletionCallback() {
+                steps.add(new DJIShootPhotoStep(new DJICommonCallbacks.DJICompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if(mMisProListener!=null) {
+                            mMisProListener.onTakePhoto(ii);
+                            if (ii == 4)
+                                mMisProListener.onLeftTarget(ct_count);
+                        }
+                    }
+                }));
+            }
+            count++;
+        }
+        return new DJICustomMission(steps);
+    }
+    public DJIMission generateInspireMission()
+    {
+        ArrayList<DJIMissionStep> steps=new ArrayList<>() ;
+        int count=0;
+        for(WayPoint wp:wayPoints)
+        {
+            //GotoCompletionCallback gtc=new GotoCompletionCallback();
+            //gtc.setOnComponentOperationListener(mOnComponentOperationListener);
+            final int ct_count=count;
+            DJIGoToStep gotoStep = new DJIGoToStep(wp.lat, wp.lng, new DJICommonCallbacks.DJICompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if(mMisProListener!=null)
+                        mMisProListener.onReachTarget(ct_count);
+                }
+            });
+            gotoStep.setFlightSpeed(fly_speed);
+            steps.add(gotoStep);
+
+            if(count==0) {//到达第一个指定位置后初始为向下镜头
+                steps.add(getDownCameraStep(-90));
+                if(mMisProListener!=null&&wayPoints.size()>2){
+                    double heading=mMisProListener.getHeading();
+                    steps.add(new DJIAircraftYawStep(new CalcBox().coorNageCalcAngle(wayPoints.get(0).toLatLng(), wayPoints.get(1).toLatLng())-heading, 50, new DJICommonCallbacks.DJICompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+
+                        }
+                    }));//调整机头方向一致
+                }
+
+            }
+            for(int i=0;i<5;i++) {
+                final int ii=i;
+                if(i!=0) {
+                    DJIGimbalAngleRotation yaw=new DJIGimbalAngleRotation(true,0, DJIGimbalRotateDirection.Clockwise);
+                    DJIGimbalAngleRotation pitch=new DJIGimbalAngleRotation(true,0,DJIGimbalRotateDirection.Clockwise);
+                    DJIGimbalAngleRotation roll=new DJIGimbalAngleRotation(true,0, DJIGimbalRotateDirection.Clockwise);
+
+                    if(count%2==0){//偶数顺时针，pitch逆时针
+                        if(i==1) {
+                            yaw.angle=0;
+                            pitch.angle =45;
+                            pitch.direction= DJIGimbalRotateDirection.Clockwise;
+                        }
+                        else {
+                            yaw.angle=90;
+                            yaw.direction= DJIGimbalRotateDirection.Clockwise;
+                            pitch.angle = 0;
+                        }
+                    }else {
+                        if(i==4) {
+                            yaw.angle=0;
+                            pitch.angle = 45;
+                            pitch.direction= DJIGimbalRotateDirection.CounterClockwise;
+                        } else {
+                            yaw.angle=90;
+                            yaw.direction= DJIGimbalRotateDirection.CounterClockwise;
+                            pitch.angle = 0;
+                        }
+                    }
+
+                    DJIGimbalAttitudeStep att_step = new DJIGimbalAttitudeStep(DJIGimbalRotateAngleMode.RelativeAngle,
+                            pitch, roll,yaw, new DJICommonCallbacks.DJICompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            Log.i("E", "is null?" + (djiError == null));
+
+                        }
+                    });
+                    att_step.completionTime=0.5;
+                    steps.add(att_step);
+                }
+                steps.add(new DJIShootPhotoStep(new DJICommonCallbacks.DJICompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
                         if(mMisProListener!=null) {
@@ -178,7 +272,7 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
         for(WayPoint wp:wayPoints)
         {
             final WayPoint wwp=wp;
-            DJIGoToStep goToStep=new DJIGoToStep(wwp.lat, wwp.lng, new DJIBaseComponent.DJICompletionCallback() {
+            DJIGoToStep goToStep=new DJIGoToStep(wwp.lat, wwp.lng, new DJICommonCallbacks.DJICompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     Log.i("E","@"+wwp.lat+","+wwp.lng);
@@ -292,7 +386,7 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
         }
     }
 
-    public DJIMission generateGoHomeMission(DJIFlightControllerDataType.DJILocationCoordinate2D latlng,int height)
+    public DJIMission generateGoHomeMission(DJILocationCoordinate2D latlng,int height)
     {
         ArrayList<DJIMissionStep> list=new ArrayList<>();
         list.add(getDownCameraStep(-45));
@@ -307,10 +401,10 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
     public DJIMission generate3PhotosMission(int pitch,int direction){
         ArrayList<DJIMissionStep> list=new ArrayList<>();
         for(int i=0;i<3;i++){
-            list.add(new DJIGimbalAttitudeStep(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle,
-                            new DJIGimbal.DJIGimbalAngleRotation(true, pitch, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                            new DJIGimbal.DJIGimbalAngleRotation(false, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                            new DJIGimbal.DJIGimbalAngleRotation(false, 15 * (i-1)*direction, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
+            list.add(new DJIGimbalAttitudeStep(DJIGimbalRotateAngleMode.AbsoluteAngle,
+                            new DJIGimbalAngleRotation(true, pitch, DJIGimbalRotateDirection.Clockwise),
+                            new DJIGimbalAngleRotation(false, 0, DJIGimbalRotateDirection.Clockwise),
+                            new DJIGimbalAngleRotation(false, 15 * (i-1)*direction, DJIGimbalRotateDirection.Clockwise),
                             null));
             list.add(new DJIShootPhotoStep(null));
             }

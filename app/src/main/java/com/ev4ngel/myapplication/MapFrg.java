@@ -36,9 +36,7 @@ import com.ev4ngel.autofly_prj.WayPoint;
 
 import java.util.ArrayList;
 
-import dji.sdk.FlightController.DJIFlightControllerDataType;
-import dji.sdk.MissionManager.DJIMissionManager;
-
+import dji.common.flightcontroller.DJILocationCoordinate2D;
 /**
  * Created by Administrator on 2016/7/15.
  */
@@ -518,10 +516,10 @@ public class MapFrg extends Fragment implements
         }
         }
     }
-    public static ArrayList<LatLng> convertFrom2D(ArrayList<DJIFlightControllerDataType.DJILocationCoordinate2D> s)
+    public static ArrayList<LatLng> convertFrom2D(ArrayList<DJILocationCoordinate2D> s)
     {
         ArrayList<LatLng> r=new ArrayList<>();
-        for(DJIFlightControllerDataType.DJILocationCoordinate2D ss:s)
+        for(DJILocationCoordinate2D ss:s)
         {
             r.add(MapFrg.fromGPSToMar(new LatLng(ss.getLatitude(), ss.getLongitude())));
         }

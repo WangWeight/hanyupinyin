@@ -112,7 +112,7 @@ public class MissionFrg extends Fragment implements DialogInterface.OnClickListe
                     mission_opt_tb.setChecked(false);
                 }
             }else if(dialog.toString().equals(ask_home_dialog.toString())){
-                ask_home_dialog.show();
+                mListener.onGoHomeMission();
             }
     }
 

@@ -38,19 +38,24 @@ import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import dji.sdk.Battery.DJIBattery;
-import dji.sdk.Camera.DJICamera;
-import dji.sdk.Camera.DJICameraSettingsDef;
-import dji.sdk.FlightController.DJIFlightController;
-import dji.sdk.FlightController.DJIFlightControllerDataType;
-import dji.sdk.Gimbal.DJIGimbal;
-import dji.sdk.MissionManager.DJICustomMission;
-import dji.sdk.MissionManager.DJIMission;
-import dji.sdk.MissionManager.DJIMissionManager;
-import dji.sdk.RemoteController.DJIRemoteController;
+import dji.common.camera.DJICameraSettingsDef;
+import dji.common.flightcontroller.DJILocationCoordinate3D;
+import dji.common.gimbal.DJIGimbalAngleRotation;
+import dji.common.gimbal.DJIGimbalAttitude;
+import dji.common.gimbal.DJIGimbalRotateAngleMode;
+import dji.common.gimbal.DJIGimbalRotateDirection;
+import dji.common.util.DJICommonCallbacks;
+import dji.sdk.battery.DJIBattery;
+import dji.sdk.camera.DJICamera;
+import dji.sdk.flightcontroller.DJIFlightController;
+import dji.sdk.gimbal.DJIGimbal;
+import dji.sdk.missionmanager.DJICustomMission;
+import dji.sdk.missionmanager.DJIMission;
+import dji.sdk.missionmanager.DJIMissionManager;
+import dji.sdk.remotecontroller.DJIRemoteController;
 import dji.sdk.base.DJIBaseComponent;
 import dji.sdk.base.DJIBaseProduct;
-import dji.sdk.base.DJIError;
+import dji.common.error.DJIError;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -80,7 +85,7 @@ public class MainActivity extends AppCompatActivity
     ProjectsConfig mPrjsCfg;
     ProjectConfig mCurrentPrjCfg;
     //views
-    private ArrayList<ArrayList<DJIFlightControllerDataType.DJILocationCoordinate3D>> missionLocations;
+    private ArrayList<ArrayList<DJILocationCoordinate3D>> missionLocations;
     private Toolbar toolbar;
     private ProjectFragment mProjectFrg;
     private MapFrg mMapFrg;
@@ -237,7 +242,7 @@ public class MainActivity extends AppCompatActivity
                 public void onProgress(DJIMission.DJIProgressType djiProgressType, float v) {
                     Log.i("e","on progress");
                 }
-            }, new DJIBaseComponent.DJICompletionCallback() {
+            }, new DJICommonCallbacks.DJICompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
@@ -256,11 +261,11 @@ public class MainActivity extends AppCompatActivity
     private void resetCameraPosition() {
         if (gimbal != null) {
             try {
-                DJIGimbal.DJIGimbalAngleRotation
-                        mPitchRotation = new DJIGimbal.DJIGimbalAngleRotation(true, -90, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        mYawRotation = new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        mRollRotation = new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise);
-                gimbal.rotateGimbalByAngle(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle, mPitchRotation, mYawRotation, mRollRotation, null);//
+                DJIGimbalAngleRotation
+                        mPitchRotation = new DJIGimbalAngleRotation(true, -90, DJIGimbalRotateDirection.Clockwise),
+                        mYawRotation = new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise),
+                        mRollRotation = new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise);
+                gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.AbsoluteAngle, mPitchRotation, mYawRotation, mRollRotation, null);//
             } catch (Exception e) {
                 Log.i("e","In reset,exception" + e.getMessage());
             }
@@ -334,6 +339,13 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        mWayPoints=new ArrayList<>();
+        mWayPoints.add(new WayPoint(41.802412,123.425932,0));
+        mWayPoints.add(new WayPoint(41.802448,123.426676,0));
+        mWayPoints.add(new WayPoint(41.802484,123.42742,0));
+        mWayPoints.add(new WayPoint(41.80252, 123.428164, 0));
+        mWayPoints.add(new WayPoint(41.802556, 123.428908, 0));
+        mWayPoints.add(new WayPoint(41.802579, 123.429388, 0));
     }
 
     @Override
@@ -498,13 +510,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPrepareMission(int speed,int height,int signal) {
-        mWayPoints=new ArrayList<>();
-        mWayPoints.add(new WayPoint(41.802412,123.425932,0));
-        mWayPoints.add(new WayPoint(41.802448,123.426676,0));
-        mWayPoints.add(new WayPoint(41.802484,123.42742,0));
-        mWayPoints.add(new WayPoint(41.80252,123.428164,0));
-        mWayPoints.add(new WayPoint(41.802556,123.428908,0));
-        mWayPoints.add(new WayPoint(41.802579, 123.429388,0));
+
         if(mWayPoints==null ||mWayPoints.size()==0)
         {
             Toast.makeText(MainActivity.this, "请先规划或者选择航线", Toast.LENGTH_SHORT).show();
@@ -520,7 +526,7 @@ public class MainActivity extends AppCompatActivity
                 }break;
                 case MissionOptSignal.MOS_START:{
                     //resetCameraPosition();
-                    gimbal.resetGimbal(new DJIBaseComponent.DJICompletionCallback() {
+                    gimbal.resetGimbal(new DJICommonCallbacks.DJICompletionCallback() {
                         @Override
                         public void onResult(DJIError djiError) {
                             if (djiError == null) {
@@ -543,7 +549,25 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onGoHomeMission() {
-        //mMission=mCM.ge
+        mMission=(DJICustomMission)mCM.generateGoHomeMission(null,0);
+        final CountDownLatch cdl=new CountDownLatch(1);
+        mMissonManager.prepareMission(mMission, null, new DJICommonCallbacks.DJICompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+              cdl.countDown();
+            }
+        });
+        try {
+            cdl.await(3,TimeUnit.SECONDS);
+            mMissonManager.startMissionExecution(new DJICommonCallbacks.DJICompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+
+                }
+            });
+        }catch (Exception e){
+
+        }
     }
 
     public void rotateCamera(int pitch,int yaw){
@@ -561,19 +585,19 @@ public class MainActivity extends AppCompatActivity
     }
     public void take3Photos(int mode){
         if(camera!=null&&gimbal!=null){
-            DJIGimbal.DJIGimbalAttitude attitude= gimbal.getAttitudeInDegrees();
+            DJIGimbalAttitude attitude= gimbal.getAttitudeInDegrees();
             for(int i=0;i<3;i++) {
                 final CountDownLatch cd=new CountDownLatch(1);
 
-                gimbal.rotateGimbalByAngle(DJIGimbal.DJIGimbalRotateAngleMode.AbsoluteAngle,
-                        new DJIGimbal.DJIGimbalAngleRotation(true, attitude.pitch, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIGimbal.DJIGimbalAngleRotation(true, 0, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIGimbal.DJIGimbalAngleRotation(true, 15 * mode, DJIGimbal.DJIGimbalRotateDirection.Clockwise),
-                        new DJIBaseComponent.DJICompletionCallback() {
+                gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.AbsoluteAngle,
+                        new DJIGimbalAngleRotation(true, attitude.pitch, DJIGimbalRotateDirection.Clockwise),
+                        new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise),
+                        new DJIGimbalAngleRotation(true, 15 * mode, DJIGimbalRotateDirection.Clockwise),
+                        new DJICommonCallbacks.DJICompletionCallback() {
                             @Override
                             public void onResult(DJIError djiError) {
                                 if (djiError == null) {
-                                    camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJIBaseComponent.DJICompletionCallback() {
+                                    camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJICommonCallbacks.DJICompletionCallback() {
                                         @Override
                                         public void onResult(DJIError djiError) {
                                             cd.countDown();
@@ -590,24 +614,13 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
-    public void takePhoto(){
-        if(camera!=null){
-            camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJIBaseComponent.DJICompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
 
-                }
-            });
-            try {
-                Thread.sleep(2000);
-            }catch (InterruptedException e){
-
-            }
-        }
-    }
 
     @Override
     public void onStopMission() {
+        if(mMissonManager!=null){
+            mMissonManager.pauseMissionExecution(null);
+        }
 
     }
 

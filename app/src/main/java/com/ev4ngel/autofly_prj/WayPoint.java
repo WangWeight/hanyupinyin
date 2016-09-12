@@ -5,7 +5,7 @@ import com.amap.api.maps2d.model.LatLng;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import dji.sdk.FlightController.DJIFlightControllerDataType;
+import dji.common.flightcontroller.DJILocationCoordinate2D;
 
 /**
  * Created by Administrator on 2016/7/18.
@@ -61,8 +61,8 @@ public class WayPoint implements IJson{
     {
         return new LatLng(lat,lng);
     }
-    public DJIFlightControllerDataType.DJILocationCoordinate2D toDJI2D()
+    public DJILocationCoordinate2D toDJI2D()
     {
-        return new DJIFlightControllerDataType.DJILocationCoordinate2D(lat,lng);
+        return new DJILocationCoordinate2D(lat,lng);
     }
 }

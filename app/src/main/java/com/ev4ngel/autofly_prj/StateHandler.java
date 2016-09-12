@@ -10,12 +10,21 @@ import com.ev4ngel.myapplication.CalcBox;
 import com.ev4ngel.myapplication.MapFrg;
 import com.loc.p;
 
-import dji.sdk.Battery.DJIBattery;
-import dji.sdk.Camera.DJICamera;
-import dji.sdk.FlightController.DJIFlightControllerDataType;
-import dji.sdk.FlightController.DJIFlightControllerDelegate;
-import dji.sdk.Gimbal.DJIGimbal;
-import dji.sdk.RemoteController.DJIRemoteController;
+import dji.common.battery.DJIBatteryState;
+import dji.common.flightcontroller.DJIFlightControllerCurrentState;
+import dji.common.flightcontroller.DJIFlightControllerDataType;
+import dji.common.flightcontroller.DJILocationCoordinate2D;
+import dji.common.camera.CameraSDCardState;
+import dji.common.flightcontroller.DJILocationCoordinate3D;
+import dji.common.gimbal.DJIGimbalAdvancedSettingsState;
+import dji.common.gimbal.DJIGimbalAttitude;
+import dji.common.gimbal.DJIGimbalState;
+import dji.common.remotecontroller.DJIRCGPSData;
+import dji.sdk.battery.DJIBattery;
+import dji.sdk.camera.DJICamera;
+import dji.sdk.flightcontroller.DJIFlightControllerDelegate;
+import dji.sdk.gimbal.DJIGimbal;
+import dji.sdk.remotecontroller.DJIRemoteController;
 
 /**
  * Created by Administrator on 2016/8/2.
@@ -43,7 +52,7 @@ public class StateHandler extends Handler implements
     public void setPhotoTakenPosition(LatLng l){
         position_last_pic=l;
     }
-    public void setPhotoTakenPosition(DJIFlightControllerDataType.DJILocationCoordinate2D p2d)
+    public void setPhotoTakenPosition(DJILocationCoordinate2D p2d)
     {
         position_last_pic=new LatLng(p2d.getLatitude(),p2d.getLongitude());
     }
@@ -104,7 +113,7 @@ public class StateHandler extends Handler implements
         }
     }
     @Override
-    public void onResult(DJIBattery.DJIBatteryState djiBatteryState) {
+    public void onResult(DJIBatteryState djiBatteryState) {
         Message m=new Message();
         Bundle b=new Bundle();
         b.putString("text", String.format("%.2f", djiBatteryState.getCurrentVoltage() / 1000.) + "V/" + djiBatteryState.getBatteryEnergyRemainingPercent() + "%");
@@ -114,7 +123,7 @@ public class StateHandler extends Handler implements
     }
 
     @Override
-    public void onResult(DJICamera.CameraSDCardState cameraSDCardState) {
+    public void onResult(CameraSDCardState cameraSDCardState) {
         Message m=new Message();
         Bundle b=new Bundle();
         b.putString("text", cameraSDCardState.getRemainingSpaceInMegaBytes()+"M/"+cameraSDCardState.getTotalSpaceInMegaBytes()+"M");
@@ -124,8 +133,8 @@ public class StateHandler extends Handler implements
     }
 
     @Override
-    public void onResult(DJIFlightControllerDataType.DJIFlightControllerCurrentState djiFlightControllerCurrentState) {
-        DJIFlightControllerDataType.DJILocationCoordinate3D tmp=djiFlightControllerCurrentState.getAircraftLocation();
+    public void onResult(DJIFlightControllerCurrentState djiFlightControllerCurrentState) {
+        DJILocationCoordinate3D tmp=djiFlightControllerCurrentState.getAircraftLocation();
         Message m=new Message();
         Bundle b = new Bundle();
         b.putDouble("lat", tmp.getLatitude());
@@ -144,7 +153,7 @@ public class StateHandler extends Handler implements
     }
 
     @Override
-    public void onGpsDataUpdate(DJIRemoteController djiRemoteController, DJIRemoteController.DJIRCGPSData djircgpsData) {
+    public void onGpsDataUpdate(DJIRemoteController djiRemoteController, DJIRCGPSData djircgpsData) {
         Message m=new Message();
         Bundle b=new Bundle();
         b.putDouble("lat",djircgpsData.latitude);
@@ -157,13 +166,13 @@ public class StateHandler extends Handler implements
     }
 
     @Override
-    public void onGimbalAdvancedSettingsStateUpdate(DJIGimbal djiGimbal, DJIGimbal.DJIGimbalAdvancedSettingsState djiGimbalAdvancedSettingsState) {
+    public void onGimbalAdvancedSettingsStateUpdate(DJIGimbal djiGimbal,DJIGimbalAdvancedSettingsState djiGimbalAdvancedSettingsState) {
 
     }
 
     @Override
-    public void onGimbalStateUpdate(DJIGimbal djiGimbal, DJIGimbal.DJIGimbalState djiGimbalState) {
-        DJIGimbal.DJIGimbalAttitude i= djiGimbalState.getAttitudeInDegrees();
+    public void onGimbalStateUpdate(DJIGimbal djiGimbal, DJIGimbalState djiGimbalState) {
+        DJIGimbalAttitude i= djiGimbalState.getAttitudeInDegrees();
         Log.i("gimbal","P:"+i.pitch+"/R:"+i.roll+"/Y:"+i.yaw+"/"+djiGimbalState.getRollFineTuneInDegrees()+"/delta:"+(i.yaw-heading) );
     }
 }

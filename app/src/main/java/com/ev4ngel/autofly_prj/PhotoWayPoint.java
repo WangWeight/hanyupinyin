@@ -8,7 +8,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import dji.sdk.FlightController.DJIFlightControllerDataType;
+import dji.common.flightcontroller.DJILocationCoordinate2D;
 
 /**
  * Created by Administrator on 2016/7/1.
@@ -44,7 +44,7 @@ public class PhotoWayPoint implements IJson{
     {
         photos.add(new PhotoInfo(pname, yaw, pitch));
     }
-    public void setPosition(DJIFlightControllerDataType.DJILocationCoordinate2D loc)
+    public void setPosition(DJILocationCoordinate2D loc)
     {
         lat=loc.getLatitude();
         lng=loc.getLongitude();
