@@ -2,6 +2,8 @@ package com.ev4ngel.myapplication;
 
 import android.util.Log;
 
+import java.util.concurrent.CountDownLatch;
+
 import dji.common.gimbal.DJIGimbalAngleRotation;
 import dji.common.gimbal.DJIGimbalRotateDirection;
 import dji.common.util.DJICommonCallbacks;
@@ -22,9 +24,17 @@ public class GotoCompletionCallback implements DJICommonCallbacks.DJICompletionC
     private int mCompletionStatus;
     private OnComponentOperationListener mListener;
     private int mDirection=1;//旋转方向，1为逆时针，0为顺时针
-    public GotoCompletionCallback()
+    int mIndex=0;
+    CountDownLatch mCountDownLatch;
+    CountDownLatch mCd;
+    CustomMission.OnGimbalOperationListener mGimbalOperationListener;
+    CustomMission.OnMissionProcessListener mMissionProcessListener;
+    public GotoCompletionCallback(int index,CustomMission.OnGimbalOperationListener listener1,CustomMission.OnMissionProcessListener listener2,CountDownLatch cd)
     {
-
+        mGimbalOperationListener=listener1;
+        mIndex=index;
+        mMissionProcessListener=listener2;
+        mCountDownLatch=cd;
     }
     public void setOnComponentOperationListener(OnComponentOperationListener l){
         mListener=l;
@@ -32,8 +42,16 @@ public class GotoCompletionCallback implements DJICommonCallbacks.DJICompletionC
 
     @Override
     public void onResult(DJIError djiError) {
-        if(djiError==null)//到达指定位置完成，进行拍照
-        {
+        if (djiError == null){
+            if(mMissionProcessListener!=null) {
+                mMissionProcessListener.onReachTarget(mIndex);
+            }
+            if(mGimbalOperationListener!=null)
+                if(mIndex%2==0)
+                    mGimbalOperationListener.rotate_camera_cw(mCountDownLatch);
+                else
+                    mGimbalOperationListener.rotate_camera_cc(mCountDownLatch);
+        }else {
 
             /* //I REALLY want to write here,but what the fuck two kind of LocationCoordinate2D???
             try {

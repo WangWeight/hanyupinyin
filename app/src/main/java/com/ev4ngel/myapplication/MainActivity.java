@@ -53,7 +53,6 @@ import dji.sdk.missionmanager.DJICustomMission;
 import dji.sdk.missionmanager.DJIMission;
 import dji.sdk.missionmanager.DJIMissionManager;
 import dji.sdk.remotecontroller.DJIRemoteController;
-import dji.sdk.base.DJIBaseComponent;
 import dji.sdk.base.DJIBaseProduct;
 import dji.common.error.DJIError;
 
@@ -65,7 +64,8 @@ public class MainActivity extends AppCompatActivity
         OnSaveWayPointListener,
         OnNewPictureGenerateListener,
         OnMissionListener,
-        GotoCompletionCallback.OnComponentOperationListener{
+        CustomMission.OnGimbalOperationListener,
+        CustomMission.OnMissionProcessListener{
     private DJIGimbal gimbal = null;
     private DJICamera camera = null;
     private DJIBattery battery = null;
@@ -258,14 +258,18 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void resetCameraPosition() {
+    private void resetCameraPosition(CountDownLatch cdl) {
         if (gimbal != null) {
             try {
                 DJIGimbalAngleRotation
                         mPitchRotation = new DJIGimbalAngleRotation(true, -90, DJIGimbalRotateDirection.Clockwise),
                         mYawRotation = new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise),
                         mRollRotation = new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise);
-                gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.AbsoluteAngle, mPitchRotation, mYawRotation, mRollRotation, null);//
+                gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.AbsoluteAngle,
+                        mPitchRotation,
+                        mYawRotation,
+                        mRollRotation,
+                        null);
             } catch (Exception e) {
                 Log.i("e","In reset,exception" + e.getMessage());
             }
@@ -293,13 +297,15 @@ public class MainActivity extends AppCompatActivity
                 .add(R.id.mission_frg, mMissionFrg, mission_frg_tag)
                 .add(R.id.position_frg, mPositionFrg, position_frg_tag)
                 .add(R.id.state_frg, mStateFrg, state_frg_tag, true)
-                .add(R.id.fpv_view,mFPViewfrg,cameraView_frg_tag)
+                .add(R.id.fpv_view,mFPViewfrg, cameraView_frg_tag)
                 .show(new String[]{prj_frg_tag});
 
         //getFragmentManager().beginTransaction().add(R.id.state_frg,mStateFrg,"state_frg").commit();
         if(mCM==null) {
             mCM = new CustomMission();
             mCM.setOnNewPictureListener(this);
+            mCM.setGimbalListener(this);
+            mCM.setOnMissionProcessListener(this);
         }
 
     }
@@ -457,49 +463,109 @@ public class MainActivity extends AppCompatActivity
         return false;
     }
 
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
         }
     }
-    public void onLoadProject(String prj_name)
-    {
-        mProject.load_project(prj_name);
-        TextView tv1=((TextView) findViewById(R.id.nav_prj_name));
-        if(tv1!=null)
-            tv1.setText("当前项目:" + mProject.current_project_name);
-        TextView tv2=((TextView)findViewById(R.id.nav_prj_detail));
-        if(tv2!=null)
-            tv2.setText(mProject.current_project_name);
 
+    public void rotateCamera_90_cw(CountDownLatch cdl) {
+        gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.RelativeAngle,
+                CustomMission.mRotateRelative_90_cw,
+                null,
+                null,
+                new CameraCompletionCallback(cdl));
     }
+    public void rotateCamera_90_cc(CountDownLatch cdl){
+        gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.RelativeAngle,
+                CustomMission.mRotateRelative_90_cc,
+                null,
+                null,
+                new CameraCompletionCallback(cdl));
+    }
+    public void rotateCamera_45_cc(CountDownLatch cdl){
+        gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.RelativeAngle,
+                null,
+                null,
+                CustomMission.mPitchRelative_45_cc,
+                new CameraCompletionCallback(cdl));
+    }
+    public void rotateCamera_45_cw(CountDownLatch cdl) {
+        gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.RelativeAngle,
+                null,
+                null,
+                CustomMission.mPitchRelative_45_cw,
+                new CameraCompletionCallback(cdl));
+    }
+    public void takePhoto(CountDownLatch cdl) {
+        camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single,
+                new CameraCompletionCallback(cdl));
+    }
+    public CountDownLatch cd_wait(CountDownLatch cd,int seconds){
+        try{
+            cd.await(seconds,TimeUnit.SECONDS);
+        }catch (Exception e){
 
-    @Override
-    public void onSaveWayPoint(String fname,ArrayList<WayPoint> wps) {//当点击保存航线按钮确认后会调用
-        if(wps!=null)
-        {
-            if(mProjectFrg!=null)
-            {
-                mProject.new_waypoint(fname).get_wp_file().set_waypoints(wps);
-                mWayPoints=wps;
-            }
+        }finally {
+            return new CountDownLatch(1);
         }
     }
-    public void onLoadWaypoint(String wpfile)
-    {
-        mWayPoints=mProject.get_wp_file().get_waypoints();
-        //mNavHeadFrg.update();
-        mMapFrg.setWayPoints(mWayPoints).drawline(true);
+    public void rotate_camera_cw(CountDownLatch cdx){
+        takePhoto(cdx);
+        cdx=cd_wait(cdx,3);
+        rotateCamera_45_cc(cdx);
+        takePhoto(cdx);
+        cdx=cd_wait(cdx,3);
+        for(int i=0;i<4;i++) {
+            rotateCamera_90_cw(cdx);
+            cdx = cd_wait(cdx, 3);
+            takePhoto(cdx);
+            cdx = cd_wait(cdx, 3);
+        }
     }
+    public void rotate_camera_cc(CountDownLatch cdx){
+        takePhoto(cdx);
+        cdx = cd_wait(cdx, 3);
+        for(int i=0;i<4;i++) {
+            rotateCamera_90_cc(cdx);
+            cdx = cd_wait(cdx, 3);
+            takePhoto(cdx);
+            cdx = cd_wait(cdx, 3);
+        }
+        rotateCamera_45_cw(cdx);
+        cdx=cd_wait(cdx,3);
+        takePhoto(cdx);
+        cdx=cd_wait(cdx,3);
+    }
+    public void take3Photos(int mode){
+        if(camera!=null&&gimbal!=null){
+            DJIGimbalAttitude attitude= gimbal.getAttitudeInDegrees();
+            for(int i=0;i<3;i++) {
+                final CountDownLatch cd=new CountDownLatch(1);
 
-    @Override
-    public void onNewPicture(String pname) {
-        if(flightController!=null) {
-            //PhotoWayPoint pwp=new PhotoWayPoint();
-            //pwp.addPhoto(pname,(float)flightController.getCompass().getHeading(),0);
-            //mProject.get_pwp_file().addPhotoWayPoint(pwp);
-            mStateHandler.setPhotoTakenPosition(flightController.getCurrentState().getAircraftLocation().getCoordinate2D());
+                gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.AbsoluteAngle,
+                        new DJIGimbalAngleRotation(true, attitude.pitch, DJIGimbalRotateDirection.Clockwise),
+                        new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise),
+                        new DJIGimbalAngleRotation(true, 15 * mode, DJIGimbalRotateDirection.Clockwise),
+                        new DJICommonCallbacks.DJICompletionCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+                                if (djiError == null) {
+                                    camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJICommonCallbacks.DJICompletionCallback() {
+                                        @Override
+                                        public void onResult(DJIError djiError) {
+                                            cd.countDown();
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                try{
+                    cd.await(2, TimeUnit.SECONDS);
+                }catch (Exception e){
+
+                }
+            }
         }
     }
 
@@ -510,7 +576,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPrepareMission(int speed,int height,int signal) {
-
         if(mWayPoints==null ||mWayPoints.size()==0)
         {
             Toast.makeText(MainActivity.this, "请先规划或者选择航线", Toast.LENGTH_SHORT).show();
@@ -554,7 +619,7 @@ public class MainActivity extends AppCompatActivity
         mMissonManager.prepareMission(mMission, null, new DJICommonCallbacks.DJICompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-              cdl.countDown();
+                cdl.countDown();
             }
         });
         try {
@@ -569,53 +634,6 @@ public class MainActivity extends AppCompatActivity
 
         }
     }
-
-    public void rotateCamera(int pitch,int yaw){
-        /*gimbal.rotateGimbalByAngle(a, b, c, d, new DJIBaseComponent.DJICompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                takePhoto();
-            }
-        });*/
-    }
-
-    @Override
-    public void resetCamera() {
-
-    }
-    public void take3Photos(int mode){
-        if(camera!=null&&gimbal!=null){
-            DJIGimbalAttitude attitude= gimbal.getAttitudeInDegrees();
-            for(int i=0;i<3;i++) {
-                final CountDownLatch cd=new CountDownLatch(1);
-
-                gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.AbsoluteAngle,
-                        new DJIGimbalAngleRotation(true, attitude.pitch, DJIGimbalRotateDirection.Clockwise),
-                        new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise),
-                        new DJIGimbalAngleRotation(true, 15 * mode, DJIGimbalRotateDirection.Clockwise),
-                        new DJICommonCallbacks.DJICompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                if (djiError == null) {
-                                    camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single, new DJICommonCallbacks.DJICompletionCallback() {
-                                        @Override
-                                        public void onResult(DJIError djiError) {
-                                            cd.countDown();
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                try{
-                    cd.await(2, TimeUnit.SECONDS);
-                }catch (Exception e){
-
-                }
-            }
-        }
-    }
-
-
     @Override
     public void onStopMission() {
         if(mMissonManager!=null){
@@ -631,8 +649,70 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onNewProject(String prj_name) {
-        mProject.new_project(prj_name,true);
+        mProject.new_project(prj_name, true);
         mPrjsCfg.add_prj(prj_name);
     }
+    public void onLoadProject(String prj_name)
+    {
+        mProject.load_project(prj_name);
+        TextView tv1=((TextView) findViewById(R.id.nav_prj_name));
+        if(tv1!=null)
+            tv1.setText("当前项目:" + mProject.current_project_name);
+        TextView tv2=((TextView)findViewById(R.id.nav_prj_detail));
+        if(tv2!=null)
+            tv2.setText(mProject.current_project_name);
+    }
 
+    @Override
+    public void onSaveWayPoint(String fname,ArrayList<WayPoint> wps) {//当点击保存航线按钮确认后会调用
+        if(wps!=null)
+        {
+            if(mProjectFrg!=null)
+            {
+                mProject.new_waypoint(fname).get_wp_file().set_waypoints(wps);
+                mWayPoints=wps;
+            }
+        }
+    }
+    public void onLoadWaypoint(String wpfile)
+    {
+        mWayPoints=mProject.get_wp_file().get_waypoints();
+        //mNavHeadFrg.update();
+        mMapFrg.setWayPoints(mWayPoints).drawline(true);
+    }
+
+    @Override
+    public void onNewPicture(String pname) {
+        if(flightController!=null) {
+            //PhotoWayPoint pwp=new PhotoWayPoint();
+            //pwp.addPhoto(pname,(float)flightController.getCompass().getHeading(),0);
+            //mProject.get_pwp_file().addPhotoWayPoint(pwp);
+            mStateHandler.setPhotoTakenPosition(flightController.getCurrentState().getAircraftLocation().getCoordinate2D());
+        }
+    }
+    public void onReachTarget(int index) {
+
+    }
+
+    @Override
+    public void onTakePhoto(int index) {
+
+    }
+
+    @Override
+    public void onGotoStep() {
+
+    }
+
+    @Override
+    public void onLeftTarget(int index) {
+
+    }
+
+    @Override
+    public float getHeading() {
+        if(flightController!=null)
+            return (float)flightController.getCompass().getHeading();
+        return 0;
+    }
 }

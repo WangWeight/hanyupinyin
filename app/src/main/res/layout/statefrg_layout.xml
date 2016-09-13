@@ -25,6 +25,11 @@
             android:id="@+id/vol_tv_id"/>
 
     </LinearLayout>
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@color/colorBlack"
+        />
     <LinearLayout
         android:layout_width="130dp"
         android:layout_height="wrap_content"
@@ -47,7 +52,11 @@
             android:text="未知"
             android:id="@+id/space_tv_id"/>
     </LinearLayout>
-
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@color/colorBlack"
+        />
     <LinearLayout
         android:layout_width="@dimen/statefrg_width"
         android:layout_height="wrap_content"
@@ -70,6 +79,11 @@
             android:id="@+id/salt_tv_id"/>
 
     </LinearLayout>
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@color/colorBlack"
+        />
     <LinearLayout
         android:layout_width="@dimen/statefrg_width"
         android:layout_height="wrap_content"
