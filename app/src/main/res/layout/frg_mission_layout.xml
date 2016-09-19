@@ -1,20 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
-    <ToggleButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textOff="开始"
-        android:textOn="暂停"
+              android:orientation="horizontal"
+              android:background="@drawable/mission_bg_red"
+              android:layout_width="150dp"
+              android:layout_height="30dp">
+    <TextView
+        android:layout_width="70dp"
+        android:layout_height="25dp"
+        android:layout_marginLeft="4dp"
         android:id="@+id/mission_opt_tb"
-        android:checked="false"/>
-    <ToggleButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textOn="返航中"
-        android:textOff="返航"
+        android:background="#ff0000"
+        android:layout_gravity="center_vertical"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="Excute"/>
+    <View
+        android:layout_width="1dp"
+        android:layout_height="25dp"
+        android:layout_gravity="center_vertical"
+        android:background="#000000"/>
+    <TextView
+        android:layout_width="70dp"
+        android:layout_height="25dp"
+        android:layout_gravity="center_vertical"
         android:id="@+id/gohome_opt_tb"
-        android:checked="false"/>
+        android:background="#ff0000"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="Home"/>
 </LinearLayout>

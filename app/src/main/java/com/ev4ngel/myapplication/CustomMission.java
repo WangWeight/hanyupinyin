@@ -2,6 +2,7 @@ package com.ev4ngel.myapplication;
 
 import android.util.Log;
 
+import com.amap.api.maps2d.model.LatLng;
 import com.ev4ngel.autofly_prj.OnNewPictureGenerateListener;
 import com.ev4ngel.autofly_prj.WayPoint;
 
@@ -21,6 +22,8 @@ import dji.sdk.camera.DJIMedia;
 import dji.sdk.gimbal.DJIGimbal;
 import dji.sdk.missionmanager.DJICustomMission;
 import dji.sdk.missionmanager.DJIMission;
+import dji.sdk.missionmanager.DJIWaypoint;
+import dji.sdk.missionmanager.DJIWaypointMission;
 import dji.sdk.missionmanager.missionstep.DJIAircraftYawStep;
 import dji.sdk.missionmanager.missionstep.DJIGimbalAttitudeStep;
 import dji.sdk.missionmanager.missionstep.DJIGoHomeStep;
@@ -115,6 +118,10 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
         {
             //GotoCompletionCallback gtc=new GotoCompletionCallback();
             //gtc.setOnComponentOperationListener(mOnComponentOperationListener);
+            if(wp.status==WayPointStatus.Done) {
+                count++;
+                continue;
+            }
             final int ct_count=count;
             DJIGoToStep gotoStep = new DJIGoToStep(wp.lat, wp.lng, new DJICommonCallbacks.DJICompletionCallback() {
                 @Override
@@ -328,15 +335,48 @@ public class CustomMission implements DJICamera.CameraGeneratedNewMediaFileCallb
             return generatePhantomMission();
         }
     }
+    public DJIWaypointMission generate5Step(LatLng _1,LatLng _2){
+        //第一个点设置向下，开始拍照，最后一个点
+        DJIGoToStep one=new DJIGoToStep(_1.latitude, _1.longitude, new DJICommonCallbacks.DJICompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
 
+            }
+        });
+        DJIGoToStep two=new DJIGoToStep(_2.latitude, _2.longitude, new DJICommonCallbacks.DJICompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+
+            }
+        });
+        //DJICustomMission m=new DJICustomMission();
+        return null;
+         }
     public DJIMission generateGoHomeMission(DJILocationCoordinate2D latlng,int height)
     {
         ArrayList<DJIMissionStep> list=new ArrayList<>();
         list.add(getDownCameraStep(-45));
         list.add(new DJIGoHomeStep(null));
-        (new DJIGoHomeStep(null)).run();
         return new DJICustomMission(list);
 
+    }
+    public DJIMission generateGoToMission(final DJILocationCoordinate2D latlng, final int height)
+    {
+        ArrayList<DJIMissionStep> list=new ArrayList<>();
+        list.add(getDownCameraStep(-45));
+        list.add(new DJIGoToStep(height, new DJICommonCallbacks.DJICompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                T.i("Finish!Up To "+height);
+            }
+        }));
+        list.add(new DJIGoToStep(latlng.getLatitude(),latlng.getLongitude(), new DJICommonCallbacks.DJICompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                T.i("Finish!Go To location");
+            }
+        }));
+        return new DJICustomMission(list);
     }
     /*
     @parma:direction 方向，1顺时针，-1逆时针

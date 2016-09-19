@@ -4,14 +4,9 @@ import android.content.Context;
 import android.widget.Toast;
 
 public class T {
-	private Context cc;
-	public T(Context c)
+	public static void i(String msg)
 	{
-		cc=c;
-	}
-	public void i(String msg)
-	{
-		Toast.makeText(cc, msg,Toast.LENGTH_SHORT).show();
+		Toast.makeText(AutoflyApplication.getContext(), msg,Toast.LENGTH_SHORT).show();
 	}
 
 }

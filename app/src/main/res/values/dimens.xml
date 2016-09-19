@@ -14,5 +14,5 @@
     <dimen name="statefrg_width">110dp</dimen>
     <dimen name="statefrg_title_size">10dp</dimen>
     <dimen name="posfrg_pos_width">120dp</dimen>
-    <dimen name="posfrg_pos_title_width">70dp</dimen>
+    <dimen name="posfrg_pos_title_width">80dp</dimen>
 </resources>

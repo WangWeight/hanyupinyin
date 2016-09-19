@@ -39,6 +39,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import dji.common.camera.DJICameraSettingsDef;
+import dji.common.flightcontroller.DJILocationCoordinate2D;
 import dji.common.flightcontroller.DJILocationCoordinate3D;
 import dji.common.gimbal.DJIGimbalAngleRotation;
 import dji.common.gimbal.DJIGimbalAttitude;
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity
     BaseFpvView fpv_view;
 
     LatLng mHomeLatlng=null;
+    DJILocationCoordinate2D mHomeLocaion=null;
     //tools
     //T log;
     private CustomMission mCM = null;
@@ -106,7 +108,7 @@ public class MainActivity extends AppCompatActivity
     protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Tools.showToast(getApplicationContext(), "Receive Broadcast,air connect is " + AutoflyApplication.isAircraftConnected());
+            T.i( "Receive Broadcast,air connect is " + AutoflyApplication.isAircraftConnected());
             if (AutoflyApplication.isAircraftConnected()) {
                 getCamera();
                 getGimbal();
@@ -164,7 +166,7 @@ public class MainActivity extends AppCompatActivity
         try {
             return AutoflyApplication.getProductInstance();
         } catch (Exception e) {
-            Tools.showToast(getApplicationContext(), e.getMessage());
+
         }
         return null;
     }
@@ -176,10 +178,10 @@ public class MainActivity extends AppCompatActivity
             gimbal.setCompletionTimeForControlAngleAction(0.5);
             /*
             if (gimbal == null) {
-                Tools.showToast(getApplicationContext(), "Init Gimbal Fail");
+                T.i( "Init Gimbal Fail");
             }
             else{
-                Tools.showToast(getApplicationContext(),"Init Gimbal Successful");
+                T.i("Init Gimbal Successful");
             }
             */
         }
@@ -192,9 +194,11 @@ public class MainActivity extends AppCompatActivity
             camera = getProduct().getCamera();
 
             if (camera == null) {
-                Tools.showToast(getApplicationContext(), "Init Camera Fail");
-            } else
-                Tools.showToast(getApplicationContext(), "Init Camera successful");
+
+            } else{
+
+            }
+
         }
     }
 
@@ -204,9 +208,9 @@ public class MainActivity extends AppCompatActivity
             battery = getProduct().getBattery();
             /*
             if (battery == null) {
-                Tools.showToast(getApplicationContext(), "Init Battery Fail");
+                T.i("Init Battery Fail");
             }
-            Tools.showToast(getApplicationContext(),"Init Battery successful");
+            T.i("Init Battery successful");
             */
         }
 
@@ -226,9 +230,9 @@ public class MainActivity extends AppCompatActivity
                 flightController = AutoflyApplication.getAircraftInstance().getFlightController();
               /*
                 if (flightController == null) {
-                    Tools.showToast(getApplicationContext(), "Init flightc Fail");
+                    T.i( "Init flightc Fail");
                 } else {
-                    Tools.showToast(getApplicationContext(), "Init flightc Successful");
+                    T.i("Init flightc Successful");
                 }
                 */
         }
@@ -258,25 +262,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void resetCameraPosition(CountDownLatch cdl) {
-        if (gimbal != null) {
-            try {
-                DJIGimbalAngleRotation
-                        mPitchRotation = new DJIGimbalAngleRotation(true, -90, DJIGimbalRotateDirection.Clockwise),
-                        mYawRotation = new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise),
-                        mRollRotation = new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise);
-                gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.AbsoluteAngle,
-                        mPitchRotation,
-                        mYawRotation,
-                        mRollRotation,
-                        null);
-            } catch (Exception e) {
-                Log.i("e","In reset,exception" + e.getMessage());
-            }
-        } else {
-            Log.i("e","In reset,gimbal null");
-        }
-    }
+
 
 
     private void initUi() {
@@ -396,7 +382,6 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
         if (id == R.id.nav_project) {
             // Handle the camera action
             mFrgShow.show(new String[]{prj_frg_tag});
@@ -468,7 +453,25 @@ public class MainActivity extends AppCompatActivity
         switch (v.getId()) {
         }
     }
-
+    public void resetCameraPosition(CountDownLatch cdl) {
+        if (gimbal != null) {
+            try {
+                DJIGimbalAngleRotation
+                        mPitchRotation = new DJIGimbalAngleRotation(true, -90, DJIGimbalRotateDirection.Clockwise),
+                        mYawRotation = new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise),
+                        mRollRotation = new DJIGimbalAngleRotation(true, 0, DJIGimbalRotateDirection.Clockwise);
+                gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.AbsoluteAngle,
+                        mPitchRotation,
+                        mYawRotation,
+                        mRollRotation,
+                        new CameraCompletionCallback(cdl));
+            } catch (Exception e) {
+                Log.i("e","In reset,exception" + e.getMessage());
+            }
+        } else {
+            Log.i("e","In reset,gimbal null");
+        }
+    }
     public void rotateCamera_90_cw(CountDownLatch cdl) {
         gimbal.rotateGimbalByAngle(DJIGimbalRotateAngleMode.RelativeAngle,
                 CustomMission.mRotateRelative_90_cw,
@@ -500,6 +503,29 @@ public class MainActivity extends AppCompatActivity
     public void takePhoto(CountDownLatch cdl) {
         camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Single,
                 new CameraCompletionCallback(cdl));
+    }
+    public void setHomeLocation(){
+        if(flightController!=null) {
+            final CountDownLatch cdl = new CountDownLatch(1);
+            flightController.getHomeLocation(new DJICommonCallbacks.DJICompletionCallbackWith<DJILocationCoordinate2D>() {
+                @Override
+                public void onSuccess(DJILocationCoordinate2D t) {
+                    if (t.getLongitude() > 0 && t.getLatitude() > 0)
+                        mHomeLocaion = new DJILocationCoordinate2D(t.getLatitude(), t.getLongitude());
+                    onHomeLocation(mHomeLocaion);
+                    cdl.countDown();
+                }
+
+                @Override
+                public void onFailure(DJIError error) {
+                    cdl.countDown();
+                }
+            });
+            cd_wait(cdl,3);
+        }
+    }
+    public void onHomeLocation(DJILocationCoordinate2D loc){
+
     }
     public CountDownLatch cd_wait(CountDownLatch cd,int seconds){
         try{
@@ -536,6 +562,14 @@ public class MainActivity extends AppCompatActivity
         cdx=cd_wait(cdx,3);
         takePhoto(cdx);
         cdx=cd_wait(cdx,3);
+    }
+    public void take1Phot(){
+        if(camera!=null){
+            DJICameraSettingsDef.CameraPhotoIntervalParam param=new DJICameraSettingsDef.CameraPhotoIntervalParam();
+            param.timeIntervalInSeconds=2;
+            //camera.setPhotoIntervalParam(param,new CameraCompletionCallback());
+            //camera.startShootPhoto(DJICameraSettingsDef.CameraShootPhotoMode.Interval);
+        }
     }
     public void take3Photos(int mode){
         if(camera!=null&&gimbal!=null){
@@ -595,7 +629,9 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void onResult(DJIError djiError) {
                             if (djiError == null) {
-                                resetCameraPosition();
+                                CountDownLatch cd=new CountDownLatch(1);
+                                resetCameraPosition(cd);
+                                cd_wait(cd,3);
                                 if (mMissonManager.isMissionReadyToExecute)
                                     mMissonManager.startMissionExecution(null);
                                 else
@@ -637,9 +673,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onStopMission() {
         if(mMissonManager!=null){
-            mMissonManager.pauseMissionExecution(null);
-        }
+            mMissonManager.stopMissionExecution(new DJICommonCallbacks.DJICompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
 
+                }
+            });
+        }
     }
 
     @Override
@@ -706,7 +746,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onLeftTarget(int index) {
-
+        mWayPoints.get(index).status=WayPointStatus.Done;
+        mProject.save();
     }
 
     @Override
