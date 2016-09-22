@@ -28,7 +28,9 @@ import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
 import com.ev4ngel.autofly_prj.PositionFrg;
 import com.ev4ngel.autofly_prj.Project;
 import com.ev4ngel.autofly_prj.ProjectConfig;
+import com.ev4ngel.autofly_prj.ProjectDatabase;
 import com.ev4ngel.autofly_prj.ProjectFragment;
+import com.ev4ngel.autofly_prj.ProjectInstance;
 import com.ev4ngel.autofly_prj.ProjectsConfig;
 import com.ev4ngel.autofly_prj.StateFrg;
 import com.ev4ngel.autofly_prj.StateHandler;
@@ -39,6 +41,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import dji.common.camera.DJICameraSettingsDef;
+import dji.common.flightcontroller.DJIAttitude;
 import dji.common.flightcontroller.DJILocationCoordinate2D;
 import dji.common.flightcontroller.DJILocationCoordinate3D;
 import dji.common.gimbal.DJIGimbalAngleRotation;
@@ -82,9 +85,11 @@ public class MainActivity extends AppCompatActivity
     String position_frg_tag="position_frg";
     String mission_frg_tag="mission_frg";
     String cameraView_frg_tag="cameraView_frg";
-    Project mProject=null;
-    ProjectsConfig mPrjsCfg;
-    ProjectConfig mCurrentPrjCfg;
+    //Project mProject=null;
+    //ProjectsConfig mPrjsCfg;
+    //ProjectConfig mCurrentPrjCfg;
+    ProjectDatabase mPrjDB=null;
+    ProjectInstance mProjectInstance;
     //views
     private ArrayList<ArrayList<DJILocationCoordinate3D>> missionLocations;
     private Toolbar toolbar;
@@ -155,11 +160,11 @@ public class MainActivity extends AppCompatActivity
 
     public void registerUiListener() {
         mProjectFrg.setOnLoadItemListener(this);
-        mProject.setOnLoadListener(this);
+        //mProject.setOnLoadListener(this);
         mMapFrg.setOnSaveWayPointListener(this);
         mMissionFrg.setOnPrepareMissionListener(this);
 
-        mProjectFrg.set_prj_list(mPrjsCfg.getProjects());
+        mProjectFrg.set_prj_list(mPrjDB.getProjects());
     }
 
     private DJIBaseProduct getProduct() {
@@ -307,21 +312,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
-
-        mPrjsCfg=ProjectsConfig.load(Project.root_dirname+Project.prj_config_fname);
-        mProject=new Project();
-        if(!mPrjsCfg.recent_project.equals("")) {
-            mCurrentPrjCfg=mPrjsCfg.open_prj(mPrjsCfg.recent_project);
-            //mProject.load_project(mPrjsCfg.recent_project);
-            onLoadProject(mPrjsCfg.recent_project);
-        } else {
-            //mProject.load_default_project();
-            onLoadProject(Project.prj_default_name);
-        }
         initParams();
-        mProjectFrg.set_project(mProject);
-        //mMapFrg.onCreate(savedInstanceState);
-        //init in initUi
         _registerReceiver();
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -331,20 +322,27 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        mWayPoints=new ArrayList<>();
+       /* mWayPoints=new ArrayList<>();
         mWayPoints.add(new WayPoint(41.802412,123.425932,0));
         mWayPoints.add(new WayPoint(41.802448,123.426676,0));
         mWayPoints.add(new WayPoint(41.802484,123.42742,0));
         mWayPoints.add(new WayPoint(41.80252, 123.428164, 0));
         mWayPoints.add(new WayPoint(41.802556, 123.428908, 0));
-        mWayPoints.add(new WayPoint(41.802579, 123.429388, 0));
+        mWayPoints.add(new WayPoint(41.802579, 123.429388, 0));*/
+        mPrjDB=ProjectDatabase.getInstance(this);
+        mPrjDB.openRecentProject();
+        mWayPoints=mPrjDB.getWaypoints(null);
+        if(mWayPoints.size()>0){
+            mMapFrg.setWayPoints(mWayPoints);
+            mMapFrg.drawline(true);
+        }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
         registerUiListener();
-        onLoadProject(mProject.current_project_name);
+        //onLoadProject(mProject.current_project_name);
     }
     @Override
     public void onBackPressed() {
@@ -684,23 +682,19 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public int onDeleteProject(String prj_name) {
-       return  mProject.remove_project(prj_name);
+        mPrjDB.deleteProject(prj_name);
+       return  0;
     }
 
     @Override
     public void onNewProject(String prj_name) {
-        mProject.new_project(prj_name, true);
-        mPrjsCfg.add_prj(prj_name);
+        mPrjDB.addProject(prj_name);
     }
     public void onLoadProject(String prj_name)
     {
-        mProject.load_project(prj_name);
+        mPrjDB.openProject(prj_name);
         TextView tv1=((TextView) findViewById(R.id.nav_prj_name));
-        if(tv1!=null)
-            tv1.setText("当前项目:" + mProject.current_project_name);
-        TextView tv2=((TextView)findViewById(R.id.nav_prj_detail));
-        if(tv2!=null)
-            tv2.setText(mProject.current_project_name);
+
     }
 
     @Override
@@ -709,14 +703,15 @@ public class MainActivity extends AppCompatActivity
         {
             if(mProjectFrg!=null)
             {
-                mProject.new_waypoint(fname).get_wp_file().set_waypoints(wps);
+                mPrjDB.addWayline(fname);
+                mPrjDB.addWaypoints(wps);
                 mWayPoints=wps;
             }
         }
     }
     public void onLoadWaypoint(String wpfile)
     {
-        mWayPoints=mProject.get_wp_file().get_waypoints();
+        mWayPoints=mPrjDB.getWaypoints(wpfile);
         //mNavHeadFrg.update();
         mMapFrg.setWayPoints(mWayPoints).drawline(true);
     }
@@ -728,6 +723,7 @@ public class MainActivity extends AppCompatActivity
             //pwp.addPhoto(pname,(float)flightController.getCompass().getHeading(),0);
             //mProject.get_pwp_file().addPhotoWayPoint(pwp);
             mStateHandler.setPhotoTakenPosition(flightController.getCurrentState().getAircraftLocation().getCoordinate2D());
+
         }
     }
     public void onReachTarget(int index) {
@@ -747,7 +743,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onLeftTarget(int index) {
         mWayPoints.get(index).status=WayPointStatus.Done;
-        mProject.save();
     }
 
     @Override

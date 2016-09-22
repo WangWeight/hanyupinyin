@@ -32,9 +32,11 @@ import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.Polyline;
 import com.amap.api.maps2d.model.PolylineOptions;
 import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
+import com.ev4ngel.autofly_prj.WayDesignFrg;
 import com.ev4ngel.autofly_prj.WayPoint;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import dji.common.flightcontroller.DJILocationCoordinate2D;
 /**
@@ -47,7 +49,8 @@ public class MapFrg extends Fragment implements
         AMap.OnMarkerClickListener,
         AMap.OnMarkerDragListener,
         DialogInterface.OnClickListener,
-        View.OnClickListener{
+        View.OnClickListener,
+WayDesignFrg.OnSelectListener{
     MapView mMapView = null;
     AMap mMap = null;
     Marker mPlane = null;
@@ -62,14 +65,10 @@ public class MapFrg extends Fragment implements
     MTBSelectWidthFragment selectWidthFrg = null;
     MTBDesignFragment designFrg=null;
     MTBClearFragment clearFrg=null;
+    WayDesignFrg mWayDesignFrg=null;
     LatLng defalut_latlng;
     int mMapOptStatus = MapOperationStatus.Design;//右侧按钮点击状态
     ArrayList<Fragment> sub_fragments;
-    FloatingActionButton fab_set;
-    FloatingActionButton fab_clear;
-    FloatingActionButton fab_draw;
-    FloatingActionButton fab_save;
-
     EditText save_name_et;//init when ask dialog showup on fab_save clicked
     AlertDialog save_line_ad;//init when ask
     AlertDialog pick_line_ad;
@@ -77,23 +76,19 @@ public class MapFrg extends Fragment implements
     private boolean isLocating=false;
     private MapMode mm=MapMode.Design;
     private LatLng startPoint;//Set it to special point in someday
+    Fragment current_show_frg=null;
     public void setMode(MapMode mode) {
         mm=mode;
         if(mode==MapMode.Design){
-            fab_save.setVisibility(View.VISIBLE);
-            fab_set.setVisibility(View.VISIBLE);
-            fab_draw.setVisibility(View.VISIBLE);
-            fab_clear.setVisibility(View.VISIBLE);
-
+            getChildFragmentManager().beginTransaction().show(mWayDesignFrg).commit();
+            if(current_show_frg!=null)
+                showMapbar(current_show_frg);
         }else
         {
-            fab_save.setVisibility(View.GONE);
-            fab_set.setVisibility(View.GONE);
-            fab_draw.setVisibility(View.GONE);
-            fab_clear.setVisibility(View.GONE);
+            getChildFragmentManager().beginTransaction().hide(mWayDesignFrg).commit();
+
         }
     }
-
 
     public void moveTo(LatLng pos)
     {
@@ -115,8 +110,14 @@ public class MapFrg extends Fragment implements
     public void cal_waypoints()
     {
         CalcBox cb = new CalcBox();
-        if (startPoint == null)
-            startPoint = mArea.area_points.get(0);
+        if (startPoint == null){
+            if(mPlane!=null){
+                startPoint = GPS.mar2GPS(mPlane.getPosition());
+            }else{
+                startPoint = mArea.area_points.get(0);
+            }
+        }
+
         if (mWayPoints_string.size() > 0) {
             clear();
         }
@@ -135,30 +136,24 @@ public class MapFrg extends Fragment implements
     }
     private  void _draw_line(final boolean isPointsReady)
     {
-        //new Handler(AutoflyApplication.getContext().getMainLooper()).post(new Runnable() {
-         //   @Override
-         //   public void run() {
-                if (!isPointsReady)
-                    cal_waypoints();
-                for (WayPoint loc : mWayPoints) {
-                    Marker m = mMap.addMarker(init_waypoint_status(loc.status));
+            if (!isPointsReady)
+                cal_waypoints();
+            for (WayPoint loc : mWayPoints) {
+                Marker m = mMap.addMarker(init_waypoint_status(loc.status));
 
-                    m.setPosition(MapFrg.fromGPSToMar(loc.toLatLng()));
-                    m.setTitle(m.getId());
-                    mWayPoints_string.add(m.getId());
-                }
-                if (mLine == null) {
-                    mLine = mMap.addPolyline(new PolylineOptions());
-                    mLine.setColor(Color.argb(100, 0, 0, 255));
-                    mLine.setWidth(1);
-                }
-                mLine.setPoints(mWayPoints_latlng);//I should convert DJICoordinate2D to LatLng type,boring
-         //   }
-        //});
+                m.setPosition(MapFrg.fromGPSToMar(loc.toLatLng()));
+                m.setTitle(m.getId());
+                mWayPoints_string.add(m.getId());
+            }
+            if (mLine == null) {
+                mLine = mMap.addPolyline(new PolylineOptions());
+                mLine.setColor(Color.argb(100, 0, 0, 255));
+                mLine.setWidth(2);
+            }
+            mLine.setPoints(mWayPoints_latlng);//I should convert DJICoordinate2D to LatLng type,boring
     }
     public void drawline(boolean isPointsReady)//若isPointsReady,不会调用计算的方法，否则会根据mArea的点重新计算
     {
-
         int maybe_number=mWayPoints.size();
         if(!isPointsReady)
             maybe_number=(int)(AMapUtils.calculateLineDistance(mArea.area_points.get(0),mArea.area_points.get(1))*AMapUtils.calculateLineDistance(mArea.area_points.get(2),mArea.area_points.get(1))/selectWidthFrg.getDirectionWidth()/selectWidthFrg.getSideWidth());
@@ -216,53 +211,6 @@ public class MapFrg extends Fragment implements
         mo.icon(BitmapDescriptorFactory.defaultMarker(wps)) ;
         return mo;
     }
-    private void init_buttons(View view)
-    {
-        fab_draw=(FloatingActionButton)view.findViewById(R.id.start_line);
-        fab_draw.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {//Two kind of statuses,editing and adding
-                showMapbar(designFrg);
-                mMapOptStatus = MapOperationStatus.Design;
-            }
-        });
-        fab_set=(FloatingActionButton)view.findViewById(R.id.set_line);
-        fab_set.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showMapbar(selectWidthFrg);
-                mMapOptStatus=MapOperationStatus.Other;
-            }
-        });
-        fab_clear=(FloatingActionButton)view.findViewById(R.id.clear_line);
-        fab_clear.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //mArea.clear();
-                showMapbar(clearFrg);
-                mMapOptStatus=MapOperationStatus.Clear;
-            }
-        });
-        fab_save=(FloatingActionButton) view.findViewById(R.id.save_line);
-        fab_save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mMapOptStatus = MapOperationStatus.Other;
-                if (mArea.getCount() == 0) {
-                    Toast.makeText(AutoflyApplication.getContext(), "请先圈定范围", Toast.LENGTH_SHORT).show();
-                } else {
-                    View vv = LayoutInflater.from(AutoflyApplication.getContext()).inflate(R.layout.save_line_dialog, null);
-                    save_name_et = (EditText) vv.findViewById(R.id.save_line_et);
-                    save_line_ad = new AlertDialog.Builder(getActivity())
-                            .setTitle("输入航线名称")
-                            .setView(vv)
-                            .setPositiveButton("保存", MapFrg.this)
-                            .setNegativeButton("取消", null).create();
-                    save_line_ad.show();
-                }
-            }
-        });
-    }
     private void init_map() {
         mMap.setMapType(AMap.MAP_TYPE_SATELLITE);
         mMap.setOnMapClickListener(this);
@@ -270,23 +218,18 @@ public class MapFrg extends Fragment implements
         //mMap.setMyLocationEnabled(true);
         mMap.setOnMarkerClickListener(this);
         UiSettings us=mMap.getUiSettings();
-        us.setCompassEnabled(true);
+        us.setCompassEnabled(false);
         //us.setMyLocationButtonEnabled(true);
         us.setScaleControlsEnabled(true);
         us.setZoomPosition(2);
-        mArea=new WayPointArea();
+        mArea =new WayPointArea();
         setWayPoints(new ArrayList<WayPoint>());
-        //mWayPoints=new ArrayList<>();
-        //mWayPoints_string=new ArrayList<>();
-        //mWayPoints_latlng=new ArrayList<>();
-        //mWayPoints_marker=new ArrayList<>();
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View map_view= inflater.inflate(R.layout.imap_layout,container,false);
-        defalut_latlng=new LatLng(42,123);
+        defalut_latlng=new LatLng(41.803200,123.428000);
         mMapView=(MapView)map_view.findViewById(R.id.imap_id);
-        init_buttons(map_view);
         return map_view;
     }
     @Override
@@ -312,13 +255,10 @@ public class MapFrg extends Fragment implements
     public void onMapClick(LatLng latLng) {
         //moveTo(latLng);
         if(mm==MapMode.Design) {
-            if (mMapOptStatus == MapOperationStatus.Design) {
+            if (mWayDesignFrg.mStatus==WayDesignFrg.Status.isDesignning) {
                 if (mArea.getCount() > 3) {
                     clear();
                     setWayPoints(new ArrayList<WayPoint>());
-                    //mWayPoints = new ArrayList<>();
-                    //mWayPoints_latlng = new ArrayList<>();
-                    //mWayPoints_string = new ArrayList<>();
                 }
                 mArea.add(new GPS().mar2GPS(latLng));
                 if (mArea.getCount() == 3) {
@@ -328,6 +268,8 @@ public class MapFrg extends Fragment implements
                     mArea.add(_4th);
                 }
                 mArea.updateArea(mMap);
+            }else if(mWayDesignFrg.mStatus==WayDesignFrg.Status.isChoosing){
+
             }
         }
     }
@@ -335,6 +277,8 @@ public class MapFrg extends Fragment implements
     public void onStart() {
         super.onStart();
         sub_fragments=new ArrayList<>();
+        mWayDesignFrg=(WayDesignFrg)getChildFragmentManager().findFragmentById(R.id.waypoint_design_frg);
+        mWayDesignFrg.setOnSelectListener(this);
         FragmentTransaction ft = getChildFragmentManager().beginTransaction();
         if(designFrg==null)
         {
@@ -460,28 +404,23 @@ public class MapFrg extends Fragment implements
     {//如果f现在可见，则将其不可见，并恢复fab_save可见
         // 如果f不可见，将其他不可见并将其可见，fab_save不可见
         FragmentTransaction ft=getFragmentManager().beginTransaction();
-        if(f!=null)
+        for(Fragment sf:sub_fragments)
         {
-            for(Fragment sf:sub_fragments)
+            if(f==null) {
+                ft.hide(sf);
+                continue;
+            }
+            if(!sf.getTag().equals(f.getTag()))
             {
-                if(!sf.getTag().equals(f.getTag()))
-                {
-                    ft.hide(sf);
-                }
-                else
-                {
-                    if(f.isHidden())
-                    {
-                        ft.show(f);
-                        fab_save.setVisibility(View.GONE);
-                    }
-                    else {
-                        ft.hide(f);
-                        fab_save.setVisibility(View.VISIBLE);
-                    }
-                }
+                ft.hide(sf);
+            }
+            else
+            {
+                current_show_frg=f;
+                ft.show(f);
             }
         }
+
         ft.commit();
     }
 
@@ -495,25 +434,24 @@ public class MapFrg extends Fragment implements
     @Override
     public void onClick(DialogInterface dialog, int which) {
         if(dialog!=null) {
-
-
-        if (dialog.toString().equals(save_line_ad.toString())) {
-            if(which==DialogInterface.BUTTON_POSITIVE){
-                String text=save_name_et.getText().toString();
-                if(!text.isEmpty()) {
-                    if (mSvListener != null)
-                        mSvListener.onSaveWayPoint(text,mWayPoints);
-                    Log.i("E","+"+mWayPoints.toString());
+            /*
+            if (dialog.toString().equals(save_line_ad.toString())) {
+                if(which==DialogInterface.BUTTON_POSITIVE){
+                    String text=save_name_et.getText().toString();
+                    if(!text.isEmpty()) {
+                        if (mSvListener != null)
+                            mSvListener.onSaveWayPoint(text, mWayPoints);
+                        Log.i("E","+"+mWayPoints.toString());
+                    }
+                    //Toast.makeText(AutoflyApplication.getContext(),save_name_et.getText().toString(),Toast.LENGTH_SHORT).show();
                 }
-                //Toast.makeText(AutoflyApplication.getContext(),save_name_et.getText().toString(),Toast.LENGTH_SHORT).show();
+            } else if (dialog.toString().equals(pick_line_ad.toString())) {
+                if(mLdListener!=null)
+                    mLdListener.onLoadNewWayPoints(mWayPoints_string.get(which));
+            } else */if(dialog.toString().equals(show_line_ad.toString())){
+                if (which == DialogInterface.BUTTON_POSITIVE)
+                    _draw_line(false);
             }
-        } else if (dialog.toString().equals(pick_line_ad.toString())) {
-            if(mLdListener!=null)
-                mLdListener.onLoadNewWayPoints(mWayPoints_string.get(which));
-        } else if(dialog.toString().equals(show_line_ad.toString())){
-            if (which == DialogInterface.BUTTON_POSITIVE)
-                _draw_line(false);
-        }
         }
     }
     public static ArrayList<LatLng> convertFrom2D(ArrayList<DJILocationCoordinate2D> s)
@@ -528,13 +466,13 @@ public class MapFrg extends Fragment implements
     public  MapFrg setWayPoints(ArrayList<WayPoint> aaa)
     {
         mWayPoints=aaa;
+        drawline(true);
         if(mWayPoints_string==null || mWayPoints_string.size()!=0)
             mWayPoints_string=new ArrayList<>();
         if(mWayPoints_marker==null||mWayPoints_marker.size()!=0)
             mWayPoints_marker=new ArrayList<>();
         if(mWayPoints_latlng==null||mWayPoints_latlng.size()!=0)
             mWayPoints_latlng=new ArrayList<>();
-
         return this;
     }
 
@@ -543,4 +481,46 @@ public class MapFrg extends Fragment implements
         mSvListener=listener;
     }
 
+    @Override
+    public void onMenuItemSelect(WayDesignFrg.Status status) {
+        switch (status){
+            case isChoosing:{
+                showMapbar(selectWidthFrg);
+            }break;
+            case isClearing:{
+               showMapbar(clearFrg);
+            }break;
+            case isDesignning:{
+                showMapbar(designFrg);
+            }break;
+            case isSaving:{
+                if (mArea.getCount() == 0) {
+                    Toast.makeText(AutoflyApplication.getContext(), "请先圈定范围", Toast.LENGTH_SHORT).show();
+                } else {
+                    mSvListener.onSaveWayPoint(new Date().toString(),mWayPoints);
+                    /*
+                    View vv = LayoutInflater.from(AutoflyApplication.getContext()).inflate(R.layout.save_line_dialog, null);
+                    save_name_et = (EditText) vv.findViewById(R.id.save_line_et);
+                    save_line_ad = new AlertDialog.Builder(getActivity())
+                            .setTitle("输入航线名称")
+                            .setView(vv)
+                            .setPositiveButton("保存", MapFrg.this)
+                            .setNegativeButton("取消", null).create();
+                    save_line_ad.show();
+                    */
+                }
+            }break;
+            case isHidding:{
+                showMapbar(null);
+            }break;
+        }
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if(!hidden && mm==MapMode.Design&&current_show_frg!=null){
+            getChildFragmentManager().beginTransaction().show(current_show_frg).commit();
+        }
+    }
 }

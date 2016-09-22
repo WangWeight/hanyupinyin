@@ -23,7 +23,7 @@ public class PositionFrg extends Fragment {
     TextView rc_direction_tv;//距离上一点距离
     TextView h_speed_tv;
     TextView v_speed_tv;
-
+    PoseBall mPosball=null;
 
     @Nullable
     @Override
@@ -37,6 +37,7 @@ public class PositionFrg extends Fragment {
         rc_direction_tv=(TextView)v.findViewById(R.id.rc_direction_tv_id);
         h_speed_tv=(TextView)v.findViewById(R.id.hsp_tv_id);
         v_speed_tv=(TextView)v.findViewById(R.id.vsp_tv_id);
+        mPosball=(PoseBall)v.findViewById(R.id.pose_ball);
         return v;
     }
     public void set_pos(double lat,double lng,float alt)
@@ -73,5 +74,8 @@ public class PositionFrg extends Fragment {
         if(v_speed_tv!=null)
             v_speed_tv.setText(String.format("%.1f",v_speed)+"m/s");
 
+    }
+    public void updatePose(float pitch,float roll){
+        mPosball.updateStatus(roll,pitch);
     }
 }

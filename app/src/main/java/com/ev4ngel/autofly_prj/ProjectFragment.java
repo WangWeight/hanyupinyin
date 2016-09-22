@@ -36,7 +36,7 @@ public class ProjectFragment extends Fragment implements
     FloatingActionButton Prj_add;
     EditText prjEt;//init in onClick
     TextView prjTv;
-    Project mPrj;
+    //Project mPrj;
             ListView mLv;
             ArrayAdapter _aa;
             AlertDialog new_prj_ad;
@@ -99,7 +99,7 @@ public class ProjectFragment extends Fragment implements
         new_prj_ad.show();
     }
     public void set_project(Project prj){
-        mPrj=prj;
+        //mPrj=prj;
     }
     public void set_prj_list(ArrayList<String> aa){
         prj_list=aa;

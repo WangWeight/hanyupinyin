@@ -34,7 +34,6 @@ public class BaseFpvView extends RelativeLayout implements TextureView.SurfaceTe
 
     public BaseFpvView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         initUI();
     }
 
@@ -73,7 +72,7 @@ public class BaseFpvView extends RelativeLayout implements TextureView.SurfaceTe
 
         initSDKCallback();
     }
-    private void setCameraLen(){
+    public void setCameraLen(){
         try {
             mProduct = AutoflyApplication.getProductInstance();
 

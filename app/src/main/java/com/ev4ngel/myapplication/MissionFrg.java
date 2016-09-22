@@ -22,7 +22,7 @@ import com.ev4ngel.autofly_prj.OnMissionListener;
 public class MissionFrg extends Fragment implements DialogInterface.OnClickListener,
         SeekBar.OnSeekBarChangeListener,
         View.OnClickListener{
-    OnMissionListener mListener;
+    OnMissionListener mListener=null;
     SeekBar fly_speed_sb;
     SeekBar rotate_speed_sb;
     SeekBar return_height_sb;

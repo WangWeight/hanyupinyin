@@ -12,6 +12,10 @@
         android:layout_marginTop="0dp">
 
     </com.ev4ngel.myapplication.BaseFpvView>
+    <com.ev4ngel.myapplication.CrossView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/cross_view"/>
     <ImageButton
         android:layout_width="30dp"
         android:layout_height="30dp"

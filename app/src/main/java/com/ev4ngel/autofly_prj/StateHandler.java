@@ -11,6 +11,7 @@ import com.ev4ngel.myapplication.MapFrg;
 import com.loc.p;
 
 import dji.common.battery.DJIBatteryState;
+import dji.common.flightcontroller.DJIAttitude;
 import dji.common.flightcontroller.DJIFlightControllerCurrentState;
 import dji.common.flightcontroller.DJIFlightControllerDataType;
 import dji.common.flightcontroller.DJILocationCoordinate2D;
@@ -79,6 +80,7 @@ public class StateHandler extends Handler implements
             case salt_id:{
 
                 mPF.set_pos(b.getDouble("lat"), b.getDouble("lng"), b.getFloat("alt"));
+                mPF.updatePose(b.getFloat("pitch"),b.getFloat("roll"));
                 position_aircraft=new LatLng(b.getDouble("lat"), b.getDouble("lng"));
                 if(position_aircraft!=null){
                     if(position_last_pic!=null)
@@ -141,11 +143,16 @@ public class StateHandler extends Handler implements
         b.putDouble("lng", tmp.getLongitude());
         b.putFloat("alt", tmp.getAltitude());
         b.putInt("heading", djiFlightControllerCurrentState.getAircraftHeadDirection());
-        b.putDouble("hspeed", Math.sqrt(Math.pow(djiFlightControllerCurrentState.getVelocityX(), 2) + Math.pow(djiFlightControllerCurrentState.getVelocityY(),2)));
+        b.putDouble("hspeed", Math.sqrt(Math.pow(djiFlightControllerCurrentState.getVelocityX(), 2) + Math.pow(djiFlightControllerCurrentState.getVelocityY(), 2)));
         b.putDouble("vspeed", djiFlightControllerCurrentState.getVelocityZ());
 
         heading=djiFlightControllerCurrentState.getAircraftHeadDirection();
+        DJIAttitude att=djiFlightControllerCurrentState.getAttitude();
+        //Log.i("e","xxxxxxxxxxx:P-"+att.pitch+",R-"+att.roll+",Y-"+att.yaw);
         b.putDouble("sat_num", djiFlightControllerCurrentState.getSatelliteCount());
+        b.putFloat("pitch",(float)att.pitch);
+        b.putFloat("roll",(float)att.roll);
+
         m.setData(b);
         m.what=salt_id;
         //position_aircraft=new LatLng(tmp.getLatitude(),tmp.getLongitude());
@@ -173,6 +180,6 @@ public class StateHandler extends Handler implements
     @Override
     public void onGimbalStateUpdate(DJIGimbal djiGimbal, DJIGimbalState djiGimbalState) {
         DJIGimbalAttitude i= djiGimbalState.getAttitudeInDegrees();
-        Log.i("gimbal","P:"+i.pitch+"/R:"+i.roll+"/Y:"+i.yaw+"/"+djiGimbalState.getRollFineTuneInDegrees()+"/delta:"+(i.yaw-heading) );
+        Log.i("gimbal","GIMBAL++++++P:"+i.pitch+"/R:"+i.roll+"/Y:"+i.yaw+"/"+djiGimbalState.getRollFineTuneInDegrees()+"/delta:"+(i.yaw-heading) );
     }
 }
