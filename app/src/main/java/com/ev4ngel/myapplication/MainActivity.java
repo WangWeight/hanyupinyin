@@ -12,6 +12,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -331,6 +332,9 @@ public class MainActivity extends AppCompatActivity
         mWayPoints.add(new WayPoint(41.802579, 123.429388, 0));*/
         mPrjDB=ProjectDatabase.getInstance(this);
         mPrjDB.openRecentProject();
+        T.i("Prj:"+ T.join(mPrjDB.getProjectList()));
+        T.i("Prj:xxxxx"+mPrjDB.getCurrent_project_id());
+        T.i(mPrjDB.getWaylines(null));
         mWayPoints=mPrjDB.getWaypoints(null);
         if(mWayPoints.size()>0){
             mMapFrg.setWayPoints(mWayPoints);
