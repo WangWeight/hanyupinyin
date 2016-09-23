@@ -34,6 +34,7 @@ public class ProjectFragment extends Fragment implements
 {
     String E="evan";
     FloatingActionButton Prj_add;
+    ProjectInstance.OnProjectOperationListener mListener;
     EditText prjEt;//init in onClick
     TextView prjTv;
     //Project mPrj;
@@ -43,7 +44,6 @@ public class ProjectFragment extends Fragment implements
             AlertDialog del_prj_ad;
             AlertDialog open_prj_ad;
             ArrayList<String> prj_list;
-            Project.OnLoadItemListener mListener;
             int mItem_index=0;
     @Nullable
     @Override
@@ -98,9 +98,7 @@ public class ProjectFragment extends Fragment implements
         prjEt.setText("");
         new_prj_ad.show();
     }
-    public void set_project(Project prj){
-        //mPrj=prj;
-    }
+
     public void set_prj_list(ArrayList<String> aa){
         prj_list=aa;
         _aa=new ArrayAdapter<String>(getActivity(),R.layout.prj_ilistview_layout,prj_list);
@@ -126,14 +124,9 @@ public class ProjectFragment extends Fragment implements
                     if(which==DialogInterface.BUTTON_POSITIVE)
                     {
                         String text=prjEt.getText().toString();
-                        if(Project.isExistProject(text))
-                        {
-
-                        }else {
-                            mListener.onNewProject(text);
-                            _aa.notifyDataSetChanged();
-                            Log.i(E, "Prj load");
-                        }
+                        mListener.onNewProject(text);
+                        _aa.notifyDataSetChanged();
+                        Log.i(E, "Prj load");
                     }
                 }
                 else
@@ -176,7 +169,7 @@ public class ProjectFragment extends Fragment implements
         mItem_index=position;
         open_prj_ad.show();
     }
-    public void setOnLoadItemListener(Project.OnLoadItemListener l){
+    public void setOnLoadItemListener(ProjectInstance.OnProjectOperationListener l){
         mListener=l;
     }
 

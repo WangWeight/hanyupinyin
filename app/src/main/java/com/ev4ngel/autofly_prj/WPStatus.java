@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * Created by Administrator on 2016/7/26.
  */
-public class WPStatus implements IJson{
+public class WPStatus {
     private String mName;
     private int mLastPos;
     private Long mTime;
@@ -58,32 +58,4 @@ public class WPStatus implements IJson{
         mStatus = status;
     }
 
-    @Override
-    public JSONObject toJson()
-    {
-        JSONObject jo=new JSONObject();
-        try{
-            jo.put(ProjectConfig.item_name,mName);
-            jo.put(ProjectConfig.item_time,mTime);
-            jo.put(ProjectConfig.item_isfinished,mStatus);
-            jo.put(ProjectConfig.item_last,mLastPos);
-        }catch (JSONException je)
-        {
-
-        }
-        return jo;
-    }
-
-
-    public void fromJson(JSONObject jo) {
-        try{
-            mName=jo.getString(ProjectConfig.item_name);
-            mTime=jo.getLong(ProjectConfig.item_time);
-            mStatus=jo.getBoolean(ProjectConfig.item_isfinished);
-            mLastPos=jo.getInt(ProjectConfig.item_last);
-        }catch (JSONException je)
-        {
-        }
-
-    }
 }

@@ -6,6 +6,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 
+import com.ev4ngel.myapplication.T;
+
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -21,11 +23,12 @@ public class ProjectDatabase extends SQLiteOpenHelper {
     String table_waypoint="waypoint";
     public static final int db_version=1;
     private int current_project_id=-1;
+    private String current_project_name="";
     private ArrayList<String> mProjectList=null;
     private ArrayList<String> mWaylineList=null;
     private ArrayList<WayPoint> mWayPointList=null;
     private int current_wayline_id=-1;
-    private ProjectDatabase mInstance;
+    private String current_wayline_name="";
     private ProjectDatabase(Context c, String prj_path){
         super(c,full_db_name,null,db_version);
         getProjects();
@@ -174,8 +177,9 @@ public class ProjectDatabase extends SQLiteOpenHelper {
     public int openProject(String name){
         //try {
         getWritableDatabase().execSQL("UPDATE project SET access_time=CURRENT_TIMESTAMP where name='"+name+"'");
-            current_project_id=getIndexByProjectName(name);
-            getWaylines(name);
+        current_project_name=name;
+        current_project_id=getIndexByProjectName(name);
+        getWaylines(name);
         openRecentWayline();
             return current_project_id;
         //}catch (SQLException e){
@@ -190,6 +194,11 @@ public class ProjectDatabase extends SQLiteOpenHelper {
     }
     public void deleteProject(String name){
         if(mProjectList.contains(name)) {
+            if(current_project_id==getIndexByProjectName(name)){
+                if(mWaylineList.size()>=2){//若有至少两个项目，则自动打开下一个
+                    openProject(mProjectList.get(1));
+                }
+            }
             getWritableDatabase().delete("project", "name=?", new String[]{name});
             mProjectList.remove(mProjectList.indexOf(name));
         }
@@ -213,6 +222,7 @@ public class ProjectDatabase extends SQLiteOpenHelper {
     }
     public int openWayline(String name){
         current_wayline_id=getIndexByWaylineName(name);
+        current_wayline_name=name;
         getWritableDatabase().execSQL("UPDATE "+table_wayline+" SET access_time=CURRENT_TIMESTAMP where prj_id='"+current_project_id+"'");
         getWaypoints(null);
         return current_wayline_id;
@@ -240,6 +250,7 @@ public class ProjectDatabase extends SQLiteOpenHelper {
         mWayPointList=new ArrayList<>();
         if(ix>=0){
             Cursor c=getReadableDatabase().query(table_waypoint, new String[]{ "lat", "lng", "alt", "status"}, "wayline_id=?", new String[]{"" + ix}, null, null, "_index asc");
+            T.l("------------>" + c.getCount());
             if(c.moveToFirst()){
                 for(int i=0;i<c.getCount();i++){
                     WayPoint wp=new WayPoint(c.getFloat(0),c.getFloat(1),c.getFloat(2),c.getFloat(3));
@@ -250,7 +261,7 @@ public class ProjectDatabase extends SQLiteOpenHelper {
         }
         return mWayPointList;
     }
-    public void addPhotoInfo(String file_name,float lat,float lng,float yaw,float pitch){
+    public void addPhotoInfo(String file_name,double lat,double lng,double yaw,double pitch){
         if(current_project_id==-1||current_wayline_id==-1)
             return;
         else{

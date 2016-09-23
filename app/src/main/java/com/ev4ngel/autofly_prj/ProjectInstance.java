@@ -7,6 +7,12 @@ import java.util.Date;
  * Created by Administrator on 2016/9/20.
  */
 public class ProjectInstance {
+    public interface OnProjectOperationListener{
+        void onLoadProject(String name);
+        void onNewProject(String name);
+        int onDeleteProject(String name);
+        void onSaveWayPoint(String filename,ArrayList<WayPoint> wps);
+    }
     String name;
     private Date create_time;
     private Date access_time;

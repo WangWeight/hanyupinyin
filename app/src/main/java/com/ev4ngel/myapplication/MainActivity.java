@@ -25,14 +25,10 @@ import com.amap.api.maps2d.model.LatLng;
 import com.ev4ngel.autofly_prj.FPView_frg;
 import com.ev4ngel.autofly_prj.OnMissionListener;
 import com.ev4ngel.autofly_prj.OnNewPictureGenerateListener;
-import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
 import com.ev4ngel.autofly_prj.PositionFrg;
-import com.ev4ngel.autofly_prj.Project;
-import com.ev4ngel.autofly_prj.ProjectConfig;
 import com.ev4ngel.autofly_prj.ProjectDatabase;
 import com.ev4ngel.autofly_prj.ProjectFragment;
 import com.ev4ngel.autofly_prj.ProjectInstance;
-import com.ev4ngel.autofly_prj.ProjectsConfig;
 import com.ev4ngel.autofly_prj.StateFrg;
 import com.ev4ngel.autofly_prj.StateHandler;
 import com.ev4ngel.autofly_prj.WayPoint;
@@ -65,12 +61,11 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         Toolbar.OnMenuItemClickListener,
         View.OnClickListener,
-        Project.OnLoadItemListener,
-        OnSaveWayPointListener,
         OnNewPictureGenerateListener,
         OnMissionListener,
         CustomMission.OnGimbalOperationListener,
-        CustomMission.OnMissionProcessListener{
+        CustomMission.OnMissionProcessListener,
+ProjectInstance.OnProjectOperationListener{
     private DJIGimbal gimbal = null;
     private DJICamera camera = null;
     private DJIBattery battery = null;
@@ -323,18 +318,11 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-       /* mWayPoints=new ArrayList<>();
-        mWayPoints.add(new WayPoint(41.802412,123.425932,0));
-        mWayPoints.add(new WayPoint(41.802448,123.426676,0));
-        mWayPoints.add(new WayPoint(41.802484,123.42742,0));
-        mWayPoints.add(new WayPoint(41.80252, 123.428164, 0));
-        mWayPoints.add(new WayPoint(41.802556, 123.428908, 0));
-        mWayPoints.add(new WayPoint(41.802579, 123.429388, 0));*/
         mPrjDB=ProjectDatabase.getInstance(this);
         mPrjDB.openRecentProject();
-        T.i("Prj:"+ T.join(mPrjDB.getProjectList()));
-        T.i("Prj:xxxxx"+mPrjDB.getCurrent_project_id());
-        T.i(mPrjDB.getWaylines(null));
+        T.l("Prj:" + T.join(mPrjDB.getProjectList()));
+        T.l("Prj:xxxxx" + mPrjDB.getCurrent_project_id());
+        T.l(mPrjDB.getWaylines(null));
         mWayPoints=mPrjDB.getWaypoints(null);
         if(mWayPoints.size()>0){
             mMapFrg.setWayPoints(mWayPoints);
@@ -698,7 +686,6 @@ public class MainActivity extends AppCompatActivity
     {
         mPrjDB.openProject(prj_name);
         TextView tv1=((TextView) findViewById(R.id.nav_prj_name));
-
     }
 
     @Override
@@ -723,11 +710,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onNewPicture(String pname) {
         if(flightController!=null) {
-            //PhotoWayPoint pwp=new PhotoWayPoint();
-            //pwp.addPhoto(pname,(float)flightController.getCompass().getHeading(),0);
-            //mProject.get_pwp_file().addPhotoWayPoint(pwp);
-            mStateHandler.setPhotoTakenPosition(flightController.getCurrentState().getAircraftLocation().getCoordinate2D());
-
+            //用于计算飞机位置与上一拍摄点距离
+            DJILocationCoordinate2D loc=flightController.getCurrentState().getAircraftLocation().getCoordinate2D();
+            mStateHandler.setPhotoTakenPosition(loc);
+            //获取飞机的姿态
+            DJIAttitude att=flightController.getCurrentState().getAttitude();
+            //保存到当前
+            mPrjDB.addPhotoInfo(pname,loc.getLatitude(),loc.getLongitude(),att.yaw,att.pitch);
         }
     }
     public void onReachTarget(int index) {

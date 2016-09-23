@@ -31,10 +31,11 @@ import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.Polyline;
 import com.amap.api.maps2d.model.PolylineOptions;
-import com.ev4ngel.autofly_prj.OnSaveWayPointListener;
+import com.ev4ngel.autofly_prj.ProjectInstance;
 import com.ev4ngel.autofly_prj.WayDesignFrg;
 import com.ev4ngel.autofly_prj.WayPoint;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -55,8 +56,7 @@ WayDesignFrg.OnSelectListener{
     AMap mMap = null;
     Marker mPlane = null;
     WayPointArea mArea = null;
-    private OnSaveWayPointListener mSvListener=null;
-    private OnLoadNewWayPointsListener mLdListener=null;
+    private ProjectInstance.OnProjectOperationListener mSvListener=null;
     public ArrayList<LatLng> mWayPoints_latlng = null;
     ArrayList<WayPoint> mWayPoints = null;
     ArrayList<String> mWayPoints_string = null;
@@ -476,7 +476,7 @@ WayDesignFrg.OnSelectListener{
         return this;
     }
 
-    public void setOnSaveWayPointListener(OnSaveWayPointListener listener)
+    public void setOnSaveWayPointListener(ProjectInstance.OnProjectOperationListener listener)
     {
         mSvListener=listener;
     }
@@ -497,7 +497,7 @@ WayDesignFrg.OnSelectListener{
                 if (mArea.getCount() == 0) {
                     Toast.makeText(AutoflyApplication.getContext(), "请先圈定范围", Toast.LENGTH_SHORT).show();
                 } else {
-                    mSvListener.onSaveWayPoint(new Date().toString(),mWayPoints);
+                    mSvListener.onSaveWayPoint(new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new Date()),mWayPoints);
                     /*
                     View vv = LayoutInflater.from(AutoflyApplication.getContext()).inflate(R.layout.save_line_dialog, null);
                     save_name_et = (EditText) vv.findViewById(R.id.save_line_et);

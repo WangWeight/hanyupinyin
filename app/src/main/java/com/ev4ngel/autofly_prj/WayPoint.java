@@ -16,7 +16,7 @@ import dji.common.flightcontroller.DJILocationCoordinate2D;
  * Created by Administrator on 2016/7/18.
  * the designed file,save and load for several times.
  */
-public class WayPoint implements IJson{
+public class WayPoint{
     static String item_lat="latitude";
     static String item_lng="longitude";
     static String item_alt="altitude";
@@ -42,29 +42,6 @@ public class WayPoint implements IJson{
         lng=loc.longitude;
         alt=0;
         status=s;
-    }
-    @Override
-    public JSONObject toJson()
-    {
-        JSONObject obj=new JSONObject();
-        try {
-            obj.put(item_lat, lat);
-            obj.put(item_lng, lng);
-            obj.put(item_status, status);
-        }catch (JSONException je)
-        {
-        }
-        return obj;
-    }
-
-    public static WayPoint fromJson(JSONObject jObj)
-    {
-        try {
-            return new WayPoint(jObj.getDouble(item_lat), jObj.getDouble(item_lng),0,jObj.getInt(item_status));
-        }catch (JSONException je)
-        {
-        }
-        return new WayPoint();
     }
 
    public LatLng toLatLng()
